@@ -10,7 +10,7 @@ import random
 import sys
 from termcolor import colored, cprint
 
-import config
+from knards import config
 
 
 # card object blueprint

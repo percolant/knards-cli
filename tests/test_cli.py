@@ -2,8 +2,7 @@ import click
 from click.testing import CliRunner
 import sys
 
-sys.path.append('..')
-import knards
+from knards import knards
 
 
 def test_main():

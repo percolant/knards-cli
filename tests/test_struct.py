@@ -1,8 +1,7 @@
 from datetime import datetime
 import sys
 
-sys.path.append('..')
-import knards
+from knards import knards
 
 
 def test_card_object_defaults():
