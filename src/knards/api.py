@@ -4,14 +4,15 @@ import sqlite3
 import subprocess
 import tempfile
 
-from knards import config, msg
+from knards import knards, config, msg
 
 
 def bootstrap_db(db_name):
   """
   TODO
   """
-  pass
+  if type(db_name) is not str:
+    raise TypeError('Input arg must be of type str')
 
 def get_card_set(
     revisable_only=False,
@@ -30,13 +31,15 @@ def create_card(card_obj):
   """
   TODO
   """
-  pass
+  if type(card_obj) is not knards.Card:
+    raise TypeError('Input arg must be of type Card')
 
 def update_card(card_obj):
   """
   TODO
   """
-  pass
+  if type(card_obj) is not knards.Card:
+    raise TypeError('Input arg must be of type Card')
 
 def delete_card(card_id=None, marker=None):
   """
