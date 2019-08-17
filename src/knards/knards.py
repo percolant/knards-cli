@@ -35,7 +35,7 @@ Card.__new__.__defaults__ = (
   0,
   'Here, type in the question text for the new card.',
   'Here, type in the answer text for the new card.',
-  [],
+  '',
   None,
   datetime.today().strftime('%Y-%m-%d'),
   datetime.today().strftime('%Y-%m-%d'),
