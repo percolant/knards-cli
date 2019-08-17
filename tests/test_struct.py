@@ -1,7 +1,7 @@
 from datetime import datetime
 import sys
 
-from knards import knards
+from knards import knards, config, api
 
 
 def test_card_object_defaults():
@@ -14,7 +14,7 @@ def test_card_object_defaults():
     0,
     'Here, type in the question text for the new card.',
     'Here, type in the answer text for the new card.',
-    [],
+    '',
     None,
     datetime.today().strftime('%Y-%m-%d'),
     datetime.today().strftime('%Y-%m-%d'),
@@ -31,8 +31,13 @@ def test_card_object_member_access():
   assert card.pos_in_series == 0
   assert card.question == 'test'
   assert card.answer == 'Here, type in the answer text for the new card.'
-  assert card.markers == []
+  assert card.markers == ''
   assert card.series == None
   assert card.date_created == datetime.today().strftime('%Y-%m-%d')
   assert card.date_updated == datetime.today().strftime('%Y-%m-%d')
   assert card.score == 1
+
+def test_bootstrap_db():
+  """
+  """
+  api.bootstrap_db(config.DB)
