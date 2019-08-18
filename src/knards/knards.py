@@ -10,7 +10,7 @@ import random
 import sys
 from termcolor import colored, cprint
 
-from knards import config
+from knards import api
 
 
 # card object blueprint
@@ -46,6 +46,10 @@ Card.__new__.__defaults__ = (
 @click.group()
 def main():
   pass
+
+@main.command()
+def bootstrap_db():
+  api.bootstrap_db()
 
 if __name__ == '__main__':
   main()
