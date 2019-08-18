@@ -4,17 +4,17 @@ import sqlite3
 import subprocess
 import tempfile
 
-from knards import knards, config, msg
+from knards import knards, config, msg, util
 
 
-def bootstrap_db(db_name):
+def bootstrap_db(db_path=config.DB):
   """
   TODO
   """
-  if type(db_name) is not str:
+  if type(db_path) is not str:
     raise TypeError('Input arg must be of type str')
 
-  connection = sqlite3.connect(db_name, detect_types=sqlite3.PARSE_DECLTYPES)
+  connection = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES)
   cursor = connection.cursor()
 
   # creating the main "cards" table
@@ -56,16 +56,23 @@ def get_card_set(
   """
   pass
 
-def get_card_by_id(card_id):
+def get_card_by_id(card_id, db_path=config.DB):
   """
-  Takes in an integer that represents target card's id.
+  Takes in:
+  1. An integer that represents target card's id.
+  2. A path to the DB file (optional, defaults to config.DB)
+
   Returns an object of type knards.Card or None if a card with the given id
   wasn't found in the DB.
   """
   if type(card_id) is not int:
-    raise TypeError('Target card\'s id must be an integer number')
+    print(msg.CARD_ID_MUST_BE_INT)
+    return None
 
-  connection = sqlite3.connect(config.DB, detect_types=sqlite3.PARSE_DECLTYPES)
+  connection = util.db_connect(db_path)
+  if not connection:
+    return None
+
   cursor = connection.cursor()
 
   with connection:
@@ -82,39 +89,54 @@ def get_card_by_id(card_id):
   card_obj = knards.Card(*card)
   return card_obj
 
-def create_card(card_obj):
+def create_card(card_obj, db_path=config.DB):
   """
-  TODO
+  Takes in:
+  1. An object of type knards.Card
+  2. A path to the DB file (optional, defaults to config.DB)
+
+  Returns an id of the card in the DB created based on this object or None upon
+  failure.
   """
   if type(card_obj) is not knards.Card:
-    raise TypeError('Input arg must be of type Card')
+    print(msg.INPUT_ARG_MUST_BE_CARD)
+    return None
 
-  connection = sqlite3.connect(config.DB, detect_types=sqlite3.PARSE_DECLTYPES)
+  connection = util.db_connect(db_path)
+  if not connection:
+    return None
+
   cursor = connection.cursor()
 
-  # get the next free id
+  # find a free id
+  # this allows to reuse ids that were used and then freed up by deleting the
+  # object
+  free_id = 1
   with connection:
-    try:
-      cursor.execute("""
-        SELECT MAX(id) FROM cards
-      """)
-      card_obj = card_obj._replace(id=(cursor.fetchone()[0] or 0) + 1)
-    except sqlite3.DatabaseError:
-      print(msg.CANNOT_CREATE_CARD)
-      return False
+    cursor.execute("""
+      SELECT (id) FROM cards
+    """)
 
+    for id in cursor.fetchall():
+      if free_id != id[0]:
+        break
+
+      free_id += 1
+
+    card_obj = card_obj._replace(id=free_id)
+
+  created_with_id = None
   with connection:
     try:
       cursor.execute("""
         INSERT INTO cards VALUES ({})
       """.format(','.join(list('?' * len(card_obj)))), (card_obj))
-    except sqlite3.DatabaseError:
+      created_with_id = cursor.lastrowid
+    except sqlite3.IntegrityError:
       print(msg.CANNOT_CREATE_CARD)
-      return False
 
   connection.close()
-
-  return card_obj.id
+  return created_with_id
 
 def update_card(card_obj):
   """
@@ -125,18 +147,42 @@ def update_card(card_obj):
 
   return True
 
-def delete_card(card_id=None, marker=None):
+def delete_card(card_id=None, markers=None, db_path=config.DB):
   """
-  TODO
+  Deletes a card specified by id if id is passed as the argument.
+  Deletes a set of cards that contain all markers sent as the 'markers'
+  argument.
+  Deletes a card specified by id if both 'card_id' and 'markers' args are
+  passed in. Ignores 'markers'
+
+  Third argument is a path to the DB file (optional, defaults to config.DB)
+
+  Returns True upon success and False upon failure.
   """
   if card_id:
     if type(card_id) is not int:
-      raise TypeError('Target card\'s id must be an integer number')
-  elif marker:
-    if type(marker) is not str:
-      raise TypeError('Markers list must be a string')
+      print(msg.CARD_ID_MUST_BE_INT)
+      return False
 
-  if card_id or marker:
+  elif markers:
+    if type(markers) is not str:
+      print(msg.MARKERS_MUST_BE_STR)
+      return False
+
+  connection = util.db_connect(db_path)
+  if not connection:
+    return False
+
+  cursor = connection.cursor()
+
+  if card_id:
+    with connection:
+      cursor.execute("""
+        DELETE FROM cards WHERE id = {}
+      """.format(card_id))
+
+  elif markers:
     pass
 
+  connection.close()
   return True
