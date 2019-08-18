@@ -9,7 +9,7 @@ def test_db_connect_with_permission_denied():
   script has no permissions to access it -> error is printed out (tested in
   CLI tests) and None is returned.
   """
-  connection = util.db_connect('/knards.db')
+  connection = util.db_connect('/test.db')
   assert connection is None
 
 def test_db_connect_with_uninitialized_db():
@@ -21,7 +21,7 @@ def test_db_connect_with_uninitialized_db():
   Also, method must clean up after itself -> the db_path file mustn't exist
   after the method returns.
   """
-  connection = util.db_connect('knards.db')
+  connection = util.db_connect('test.db')
   assert connection is None
 
-  assert not os.path.exists('knards.db')
+  assert not os.path.exists('test.db')

@@ -1,7 +1,6 @@
 from datetime import datetime
-import sys
 
-from knards import knards, config, api
+from knards import knards
 
 
 def test_card_object_defaults():
@@ -36,8 +35,3 @@ def test_card_object_member_access():
   assert card.date_created == datetime.today().strftime('%Y-%m-%d')
   assert card.date_updated == datetime.today().strftime('%Y-%m-%d')
   assert card.score == 1
-
-def test_bootstrap_db():
-  """
-  """
-  api.bootstrap_db(config.DB)
