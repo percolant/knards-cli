@@ -9,22 +9,26 @@ from knards import knards, config, msg, util
 
 def bootstrap_db(db_path=config.DB):
   """
-  TODO
+  Creates the DB file and creates the "cards" table in it if there's no file
+  with the name passed as the argument. Else returns False.
   """
   if type(db_path) is not str:
-    raise TypeError('Input arg must be of type str')
+    print(msg.DB_PATH_MUST_BE_STR)
+    return False
 
-  connection = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES)
+  # connection might fail here if the script has no permission to write to
+  # db_path
+  try:
+    connection = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES)
+  except sqlite3.OperationalError:
+    print(msg.CANNOT_CONNECT_TO_DB_PERMISSION_DENIED.format(db_path))
+    return False
+
   cursor = connection.cursor()
 
-  # creating the main "cards" table
+  # create the main "cards" table
   with connection:
     try:
-      cursor.execute("""
-        SELECT * FROM cards
-      """)
-      print(msg.CANNOT_CREATE_DB.format(db_name))
-    except sqlite3.OperationalError:
       cursor.execute("""
         CREATE TABLE cards (
           id integer primary key,
@@ -38,9 +42,12 @@ def bootstrap_db(db_path=config.DB):
           score number
         )
       """)
+    except sqlite3.OperationalError:
+      print(msg.DB_ALREADY_EXISTS.format(db_path))
+      return False
 
+  print(msg.BOOTSTRAP_DB_SUCCESS.format(db_path))
   connection.close()
-
   return True
 
 def get_card_set(
