@@ -1,20 +1,15 @@
 import os
 import pytest
-from knards import knards, api
+from knards import api
 
-
-@pytest.fixture(autouse=True)
-def init_db(tmpdir):
-  """
-  TODO
-  """
-  api.bootstrap_db(str(tmpdir) + '/knards.db')
-  yield str(tmpdir) + '/knards.db'
-  os.remove(str(tmpdir) + '/knards.db')
 
 @pytest.fixture()
-def bad_db_path(tmpdir):
+def init_db(tmpdir):
   """
-  TODO
+  Add and use this fixture everywhere you work with the DB. This creates a
+  'test.db' DB in the current dir, runs the test with it, and removes the file
+  afterwards.
   """
-  return str(tmpdir) + '/nonexistent.db'
+  api.bootstrap_db(str(tmpdir) + '/test.db')
+  yield str(tmpdir) + '/test.db'
+  os.remove(str(tmpdir) + '/test.db')
