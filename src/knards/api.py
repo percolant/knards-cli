@@ -59,7 +59,8 @@ def get_card_set(
 def get_card_by_id(card_id):
   """
   Takes in an integer that represents target card's id.
-  Returns an object of type knards.Card
+  Returns an object of type knards.Card or None if a card with the given id
+  wasn't found in the DB.
   """
   if type(card_id) is not int:
     raise TypeError('Target card\'s id must be an integer number')
@@ -74,6 +75,10 @@ def get_card_by_id(card_id):
     card = cursor.fetchone()
 
   connection.close()
+
+  if not card:
+    return None
+
   card_obj = knards.Card(*card)
   return card_obj
 

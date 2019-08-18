@@ -21,3 +21,11 @@ def test_get_card_by_id_returns_object_of_proper_type_and_has_id_set():
 
   assert isinstance(return_value, knards.Card)
   assert return_value.id == card_id
+
+def test_get_card_by_id_upon_nonexistent_id():
+  """
+  get_card_by_id() returns None if a card with the passed in id wasn't found
+  in the DB.
+  """
+  return_value = api.get_card_by_id(-1)
+  assert not return_value
