@@ -2,17 +2,9 @@
 
 import click
 from datetime import datetime
-import os
 from collections import namedtuple
-import re
-import readchar
-import random
-import sys
-import subprocess
-from termcolor import colored, cprint
-import tempfile
 
-from knards import api, msg
+from knards import api, msg, util
 
 
 # card object blueprint
@@ -67,12 +59,7 @@ def new(qf):
 
     valid = False
     while not valid:
-      with tempfile.NamedTemporaryFile(suffix=".kn") as tf:
-        tf.write(prompt.encode('utf-8'))
-        tf.flush()
-        subprocess.call(['vim', tf.name])
-        tf.seek(0)
-        submit_question = tf.read().decode('utf-8').strip()
+      submit_question = util.open_in_editor(prompt)
 
       for index, line in enumerate(submit_question.split('\n')):
         if index == 0 and 'Markers: [' not in line:
@@ -95,12 +82,7 @@ def new(qf):
 
     valid = False
     while not valid:
-      with tempfile.NamedTemporaryFile(suffix=".kn") as tf:
-        tf.write(submit_question.encode('utf-8'))
-        tf.flush()
-        subprocess.call(['vim', tf.name])
-        tf.seek(0)
-        submit_answer = tf.read().decode('utf-8').strip()
+      submit_answer = util.open_in_editor(submit_question)
 
       for index, line in enumerate(submit_answer.split('\n')):
         if index == 0 and 'Markers: [' not in line:
@@ -156,12 +138,7 @@ def new(qf):
 
     valid = False
     while not valid:
-      with tempfile.NamedTemporaryFile(suffix=".kn") as tf:
-        tf.write(prompt.encode('utf-8'))
-        tf.flush()
-        subprocess.call(['vim', tf.name])
-        tf.seek(0)
-        submit_answer = tf.read().decode('utf-8').strip()
+      submit_answer = util.open_in_editor(prompt)
 
       for index, line in enumerate(submit_answer.split('\n')):
         if index == 0 and 'Markers: [' not in line:
@@ -184,12 +161,7 @@ def new(qf):
 
     valid = False
     while not valid:
-      with tempfile.NamedTemporaryFile(suffix=".kn") as tf:
-        tf.write(submit_answer.encode('utf-8'))
-        tf.flush()
-        subprocess.call(['vim', tf.name])
-        tf.seek(0)
-        submit_question = tf.read().decode('utf-8').strip()
+      submit_question = util.open_in_editor(submit_answer)
 
       for index, line in enumerate(submit_question.split('\n')):
         if index == 0 and 'Markers: [' not in line:
