@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from knards import knards, api
 
 
@@ -55,3 +57,74 @@ def test_create_card_index_generation(init_db):
   assert api.delete_card(card_id=2, db_path=init_db)
   card_id = api.create_card(card_obj1, init_db)
   assert card_id == 2
+
+def test_get_card_set_returns_set_of_card_objects(init_db):
+  """
+  TODO
+  """
+  card_obj1 = knards.Card(
+    question='_question_',
+    answer='_answer_',
+    markers='python specific',
+  )
+  card_obj2 = knards.Card(
+    question='_question_',
+    answer='_answer_',
+    markers='javascript specific',
+    score=20,
+  )
+  card_obj3 = knards.Card(
+    question='_question_',
+    answer='_answer_',
+    markers='nonspecific',
+    date_updated=(datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d'),
+  )
+  api.create_card(card_obj1)
+  api.create_card(card_obj2)
+  api.create_card(card_obj3)
+
+  result = api.get_card_set()
+  assert len(result) == 3
+  assert result[0].question == '_question_'
+  assert result[1].answer == '_answer_'
+  assert result[2].markers == 'nonspecific'
+  assert result[1].id == 2
+  assert result[0].date_created == datetime.today().strftime('%Y-%m-%d')
+  assert result[2].date_updated == datetime.today().strftime('%Y-%m-%d')
+
+  result = api.get_card_set(
+    revisable_only=True
+  )
+  assert len(result) == 2
+  assert result[0].score == 0
+  assert result[1].score == 0
+
+  result = api.get_card_set(
+    today=True
+  )
+  assert len(result) == 2
+  assert result[0].score == 0
+  assert result[1].score == 20
+
+  result = api.get_card_set(
+    show_question=False,
+    include_markers='specific',
+  )
+  assert len(result) == 2
+  assert result[0].question == ''
+  assert result[1].question == ''
+  assert result[0].answer == '_answer_'
+  assert result[1].answer == '_answer_'
+  assert 'nonspecific' not in result[0].markers
+  assert 'nonspecific' not in result[1].markers
+
+  result = api.get_card_set(
+    show_question=False,
+    show_answer=False,
+    include_markers='specific',
+    exclude_markers='python',
+  )
+  assert len(result) == 1
+  assert result[0].question == ''
+  assert result[0].answer == ''
+  assert result[0].markers == 'javascript specific'
