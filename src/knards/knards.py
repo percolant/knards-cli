@@ -3,6 +3,7 @@
 import click
 from datetime import datetime
 from collections import namedtuple
+import readchar
 
 from knards import api, msg, util
 
@@ -48,6 +49,9 @@ def bootstrap_db():
 @main.command()
 @click.option('--qf/--af', default=True)
 def new(qf):
+  """
+  TODO
+  """
   card_obj = Card()
 
   if qf:
@@ -60,6 +64,9 @@ def new(qf):
     valid = False
     while not valid:
       submit_question = util.open_in_editor(prompt)
+
+      if len(submit_question.split('\n')) < 5:
+        submit_question += '\n' * (5 - len(submit_question.split('\n')))
 
       for index, line in enumerate(submit_question.split('\n')):
         if index == 0 and 'Markers: [' not in line:
@@ -80,9 +87,21 @@ def new(qf):
       else:
         valid = True
 
+      if not valid:
+        print(msg.RETRY)
+        retry = readchar.readkey()
+        if retry != 'y':
+          return False
+
+        # offset one line downwards to make output more readable
+        print()
+
     valid = False
     while not valid:
       submit_answer = util.open_in_editor(submit_question)
+
+      if len(submit_answer.split('\n')) < 5:
+        submit_answer += '\n' * (5 - len(submit_answer.split('\n')))
 
       for index, line in enumerate(submit_answer.split('\n')):
         if index == 0 and 'Markers: [' not in line:
@@ -102,6 +121,15 @@ def new(qf):
           break
       else:
         valid = True
+
+      if not valid:
+        print(msg.RETRY)
+        retry = readchar.readkey()
+        if retry != 'y':
+          return False
+
+        # offset one line downwards to make output more readable
+        print()
 
     question_text = ''
     for index, line in enumerate(submit_question.split('\n')):
@@ -140,6 +168,9 @@ def new(qf):
     while not valid:
       submit_answer = util.open_in_editor(prompt)
 
+      if len(submit_answer.split('\n')) < 5:
+        submit_answer += '\n' * (5 - len(submit_answer.split('\n')))
+
       for index, line in enumerate(submit_answer.split('\n')):
         if index == 0 and 'Markers: [' not in line:
           print(msg.CLI_ERROR_DONT_CHANGE_MARKERS)
@@ -159,9 +190,21 @@ def new(qf):
       else:
         valid = True
 
+      if not valid:
+        print(msg.RETRY)
+        retry = readchar.readkey()
+        if retry != 'y':
+          return False
+
+        # offset one line downwards to make output more readable
+        print()
+
     valid = False
     while not valid:
       submit_question = util.open_in_editor(submit_answer)
+
+      if len(submit_question.split('\n')) < 5:
+        submit_question += '\n' * (5 - len(submit_question.split('\n')))
 
       for index, line in enumerate(submit_question.split('\n')):
         if index == 0 and 'Markers: [' not in line:
@@ -181,6 +224,15 @@ def new(qf):
           break
       else:
         valid = True
+
+      if not valid:
+        print(msg.RETRY)
+        retry = readchar.readkey()
+        if retry != 'y':
+          return False
+
+        # offset one line downwards to make output more readable
+        print()
 
     question_text = ''
     for index, line in enumerate(submit_question.split('\n')):
