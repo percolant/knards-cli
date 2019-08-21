@@ -220,3 +220,64 @@ def test_new(mocker):
     assert result.exit_code != 0
     assert result.output == msg.CLI_ERROR_TOO_MANY_DIVIDER_LINES + '\n' + \
                             msg.RETRY + '\n'
+
+def test_list(mocker):
+  """
+  $ kn list
+  $ kn list --no-a --inc=python --exc="Django,REST"
+  Processes markers to include/exclude, fetches cards, combines a buffer with
+  texts, and outputs via set up editor.
+  """
+  runner = CliRunner()
+  with runner.isolated_filesystem():
+    # create the DB
+    runner.invoke(knards.main, ['bootstrap-db'])
+
+    # and populate it with some cards
+    card_obj1 = knards.Card(
+      question='_question_',
+      answer='_answer_',
+      markers='python specific'
+    )
+    card_obj2 = knards.Card(
+      question='_question_',
+      answer='_answer_',
+      markers='javascript specific'
+    )
+    card_obj3 = knards.Card(
+      question='_question_',
+      answer='_answer_',
+      markers='nonspecific'
+    )
+    api.create_card(card_obj1)
+    api.create_card(card_obj2)
+    api.create_card(card_obj3)
+
+    # mock the open_in_editor method
+    mocker.patch('knards.util.open_in_editor', return_value='')
+
+    runner.invoke(knards.main, ['list'])
+    # no args passed -> we expect all three cards to be present in the buffer
+    assert util.open_in_editor.call_count == 1
+    assert str(util.open_in_editor.call_args).count('_question_') == 3
+
+    runner.invoke(knards.main, ['list', '--inc=specific'])
+    # we expect only two cards to be output
+    assert util.open_in_editor.call_count == 2
+    assert str(util.open_in_editor.call_args).count('_question_') == 2
+
+    runner.invoke(knards.main, ['list', '--exc=specific'])
+    # we expect only one card to be output
+    assert util.open_in_editor.call_count == 3
+    assert str(util.open_in_editor.call_args).count('_question_') == 1
+
+    runner.invoke(knards.main, ['list', '--inc="python,javascript"'])
+    # we expect no cards in the output
+    assert util.open_in_editor.call_count == 4
+    assert str(util.open_in_editor.call_args).count('_question_') == 0
+
+    runner.invoke(knards.main, ['list', '--inc=python,specific', '--no-q'])
+    # we expect one card to be output and no question texts in the output
+    assert util.open_in_editor.call_count == 5
+    assert str(util.open_in_editor.call_args).count('_question_') == 0
+    assert str(util.open_in_editor.call_args).count('_answer_') == 1
