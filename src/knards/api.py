@@ -56,12 +56,121 @@ def get_card_set(
     show_answer=True,
     include_markers=[],
     exclude_markers=[],
-    today=False
+    today=False,
+    db_path=config.DB
   ):
   """
-  TODO
+  Takes in:
+  1. revisable_only - only output cards that are ready to be revised (see below)
+  2. show_question - include/exclude the question text from returned card objects.
+  3. show_answer - include/exclude the answer text from returned card objects.
+  4. include_markers - must be list -> markers that MUST be present in each
+  returned card.
+  5. exclude_markers - must be list -> markers that any one of the returned
+  cards may have.
+  6. today - only output cards that were already revised today.
+
+  Outputs a list of objects of type knards.Card
   """
-  pass
+  connection = util.db_connect(db_path)
+  if not connection:
+    return None
+
+  cursor = connection.cursor()
+
+  with connection:
+    cursor.execute("""
+      SELECT * FROM cards
+    """)
+    card_set = cursor.fetchall()
+
+  connection.close()
+
+  if not card_set:
+    return []
+
+  # translate dates to str
+  card_set_as_objects = []
+  for card in card_set:
+    holder = list(card)
+    for index, prop in enumerate(holder):
+      if isinstance(prop, date):
+        holder[index] = prop.strftime('%Y-%m-%d')
+    # and cast to knards.Card
+    card_set_as_objects.append(knards.Card(*holder))
+
+  card_set_revisable = []
+  for card in card_set_as_objects:
+    # if revisable_only is True -> only return cards that has their score
+    # equal to or more than the difference between today and the date of the
+    # last card update (revision) and cards that weren't yet revised
+    if revisable_only:
+      if card.date_updated is None:
+        card_set_revisable.append(card)
+      elif card.score <= (
+        datetime.today() - datetime.strptime(card.date_updated, '%Y-%m-%d')
+      ).days:
+        card_set_revisable.append(card)
+    else:
+      card_set_revisable = card_set_as_objects
+      break
+
+  card_set_included_markers = []
+  for card in card_set_revisable:
+    # if include_markers is not '' -> filter cards that must have all of the
+    # specified markers (as whole words)
+    if include_markers:
+      compare_list = card.markers.split()
+      for marker in include_markers:
+        if not marker in compare_list:
+          break
+      else:
+        card_set_included_markers.append(card)
+    else:
+      card_set_included_markers = card_set_revisable
+      break
+
+  card_set_excluded_markers = []
+  for card in card_set_included_markers:
+    # if exclude_markers is not '' -> filter cards that must have none of the
+    # specified markers (as whole words)
+    if exclude_markers:
+      compare_list = card.markers.split()
+      for marker in exclude_markers:
+        if marker in compare_list:
+          break
+      else:
+        card_set_excluded_markers.append(card)
+    else:
+      card_set_excluded_markers = card_set_included_markers
+      break
+
+  card_set_today = []
+  for card in card_set_excluded_markers:
+    # return cards that have date_updated equal to today's date (were revised
+    # today)
+    if today:
+      if card.date_updated == datetime.today().strftime('%Y-%m-%d'):
+        card_set_today.append(card)
+    else:
+      card_set_today = card_set_excluded_markers
+      break
+
+  if not show_question:
+    card_set_without_questions = []
+    for card in card_set_today:
+      card_set_without_questions.append(card._replace(question=''))
+  else:
+    card_set_without_questions = card_set_today
+
+  if not show_answer:
+    card_set_without_answers = []
+    for card in card_set_without_questions:
+      card_set_without_answers.append(card._replace(answer=''))
+  else:
+    card_set_without_answers = card_set_without_questions
+
+  return card_set_without_answers
 
 def get_card_by_id(card_id, db_path=config.DB):
   """
@@ -92,6 +201,12 @@ def get_card_by_id(card_id, db_path=config.DB):
 
   if not card:
     return None
+
+  # cast card to list, translate dates to str
+  card = list(card)
+  for index, prop in enumerate(card):
+    if isinstance(prop, date):
+      card[index] = prop
 
   card_obj = knards.Card(*card)
   return card_obj
