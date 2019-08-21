@@ -33,7 +33,7 @@ Card.__new__.__defaults__ = (
   '',
   None,
   datetime.today().strftime('%Y-%m-%d'),
-  datetime.today().strftime('%Y-%m-%d'),
+  None,
   0
 )
 
@@ -259,6 +259,55 @@ def new(qf):
       print(msg.NEW_CARD_SUCCESS.format(card_id))
     else:
       print(msg.NEW_CARD_FAILURE)
+
+@main.command()
+@click.option('--q/--no-q', default=True)
+@click.option('--a/--no-a', default=True)
+@click.option('--inc')
+@click.option('--exc')
+def list(q, a, inc, exc):
+  """
+  TODO
+  """
+  if inc is not None:
+    inc_markers_list = inc.split(',')
+  else:
+    inc_markers_list = []
+  if exc is not None:
+    exc_markers_list = exc.split(',')
+  else:
+    exc_markers_list = []
+
+  # fetch cards from the DB according to the constraints defined by input args
+  card_set = api.get_card_set(
+    show_question=q,
+    show_answer=a,
+    include_markers=inc_markers_list,
+    exclude_markers=exc_markers_list,
+  )
+
+  # generate list buffer
+  buf = ''
+  for card in card_set:
+    if card.date_updated is not None:
+      date_updated = datetime.strptime(card.date_updated, '%Y-%m-%d').strftime('%d %b %Y')
+    else:
+      date_updated = 'Never'
+    buf += msg.CARD_LIST_TEMPLATE.format(
+      card.id,
+      card.markers,
+      card.pos_in_series,
+      card.series,
+      datetime.strptime(card.date_created, '%Y-%m-%d').strftime('%d %b %Y'),
+      date_updated,
+      card.score,
+      msg.DIVIDER_LINE,
+      card.question,
+      msg.DIVIDER_LINE,
+      card.answer,
+    )
+
+  util.open_in_editor(buf)
 
 
 if __name__ == '__main__':
