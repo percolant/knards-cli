@@ -1,6 +1,8 @@
 # AUXILIARY TEXTS
 DIVIDER_LINE = '--------------------------------------------------------------\
 --------------------------------------'
+CARD_LIST_TEMPLATE = '''=== #{} | {} | #{} in "{}" | {} | {} | {} ===\n\
+\n{}\n{}\n{}\n{}\n'''
 
 # SUCCESS MESSAGES
 BOOTSTRAP_DB_SUCCESS = '{} was successfully created.'
