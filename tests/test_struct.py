@@ -16,7 +16,7 @@ def test_card_object_defaults():
     '',
     None,
     datetime.today().strftime('%Y-%m-%d'),
-    datetime.today().strftime('%Y-%m-%d'),
+    None,
     0
   )
   assert card_1 == card_2
@@ -26,12 +26,12 @@ def test_card_object_member_access():
   Check .field functionality of namedtuple.
   """
   card = knards.Card(question='test', score=1)
-  assert card.id == None
+  assert card.id is None
   assert card.pos_in_series == 0
   assert card.question == 'test'
   assert card.answer == 'Here, type in the answer text for the new card.'
   assert card.markers == ''
-  assert card.series == None
+  assert card.series is None
   assert card.date_created == datetime.today().strftime('%Y-%m-%d')
-  assert card.date_updated == datetime.today().strftime('%Y-%m-%d')
+  assert card.date_updated is None
   assert card.score == 1
