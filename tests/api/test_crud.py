@@ -77,38 +77,49 @@ def test_get_card_set_returns_set_of_card_objects(init_db):
     question='_question_',
     answer='_answer_',
     markers='nonspecific',
+    score=2,
     date_updated=(datetime.today() - timedelta(days=1)).strftime('%Y-%m-%d'),
   )
-  api.create_card(card_obj1)
-  api.create_card(card_obj2)
-  api.create_card(card_obj3)
+  card_obj4 = knards.Card(
+    question='_question_',
+    answer='_answer_',
+    score=1,
+    date_updated=datetime.today().strftime('%Y-%m-%d')
+  )
+  api.create_card(card_obj1, init_db)
+  api.create_card(card_obj2, init_db)
+  api.create_card(card_obj3, init_db)
+  api.create_card(card_obj4, init_db)
 
-  result = api.get_card_set()
-  assert len(result) == 3
+  result = api.get_card_set(db_path=init_db)
+  for obj in result:
+    assert isinstance(obj, knards.Card)
+  assert len(result) == 4
   assert result[0].question == '_question_'
   assert result[1].answer == '_answer_'
   assert result[2].markers == 'nonspecific'
   assert result[1].id == 2
   assert result[0].date_created == datetime.today().strftime('%Y-%m-%d')
-  assert result[2].date_updated == datetime.today().strftime('%Y-%m-%d')
+  assert result[2].date_updated != datetime.today().strftime('%Y-%m-%d')
 
   result = api.get_card_set(
-    revisable_only=True
-  )
-  assert len(result) == 2
-  assert result[0].score == 0
-  assert result[1].score == 0
-
-  result = api.get_card_set(
-    today=True
+    revisable_only=True,
+    db_path=init_db
   )
   assert len(result) == 2
   assert result[0].score == 0
   assert result[1].score == 20
 
   result = api.get_card_set(
+    today=True,
+    db_path=init_db
+  )
+  assert len(result) == 1
+
+  result = api.get_card_set(
     show_question=False,
-    include_markers='specific',
+    include_markers=['specific'],
+    db_path=init_db
   )
   assert len(result) == 2
   assert result[0].question == ''
@@ -121,8 +132,9 @@ def test_get_card_set_returns_set_of_card_objects(init_db):
   result = api.get_card_set(
     show_question=False,
     show_answer=False,
-    include_markers='specific',
-    exclude_markers='python',
+    include_markers=['specific'],
+    exclude_markers=['python'],
+    db_path=init_db
   )
   assert len(result) == 1
   assert result[0].question == ''
