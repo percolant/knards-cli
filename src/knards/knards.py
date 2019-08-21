@@ -44,13 +44,17 @@ def main():
 
 @main.command()
 def bootstrap_db():
+  """
+  Initialize the DB.
+  Launch this if you haven't got the file with DB (see config.py to set its name)
+  """
   api.bootstrap_db()
 
 @main.command()
-@click.option('--qf/--af', default=True)
+@click.option('--qf/--af', default=True, help='What should be prompted for first? Question or answer?')
 def new(qf):
   """
-  TODO
+  Prompt to create a new card.
   """
   card_obj = Card()
 
@@ -261,13 +265,13 @@ def new(qf):
       print(msg.NEW_CARD_FAILURE)
 
 @main.command()
-@click.option('--q/--no-q', default=True)
-@click.option('--a/--no-a', default=True)
-@click.option('--inc')
-@click.option('--exc')
+@click.option('--q/--no-q', default=True, help='Should the output include the question text?')
+@click.option('--a/--no-a', default=True, help='Should the output include the answer text?')
+@click.option('--inc', help='A marker or a list of markers. Only cards that contain ALL of those markers will be output')
+@click.option('--exc', help='A marker or a list of markers. Only cards that do not contain NEITHER of those markers will be output')
 def list(q, a, inc, exc):
   """
-  TODO
+  Output a set of cards in the set up editor.
   """
   if inc is not None:
     inc_markers_list = inc.split(',')
