@@ -1,5 +1,6 @@
 import os
 from click.testing import CliRunner
+import readchar
 
 from knards import knards, api, config, msg, util
 
@@ -220,6 +221,60 @@ def test_new(mocker):
     assert result.exit_code != 0
     assert result.output == msg.CLI_ERROR_TOO_MANY_DIVIDER_LINES + '\n' + \
                             msg.RETRY + '\n'
+
+def test_new_retry_upon_error_behavior(mocker):
+  """
+  If the prompt is filled in wrongly, the script will ask if the user wants to
+  retry and fill in the prompt again.
+  If the user presses y<Enter> -> the buffer that was just output in editor is
+  output again.
+  If the user presses any other key<Enter> -> the script returns False
+  """
+  card_obj = knards.Card()
+  prompt = 'Markers: []\n'
+  prompt += 'Series: []\n'
+  prompt += 'No. in series: 1\n'
+  prompt += msg.DIVIDER_LINE + '\n'
+  prompt += card_obj.question + '\n'
+  wrong_prompt = 'Series: []\n'
+  wrong_prompt += 'No. in series: 1\n'
+  wrong_prompt += msg.DIVIDER_LINE + '\n'
+  wrong_prompt += 'Test question text\n'
+
+  runner = CliRunner()
+  with runner.isolated_filesystem():
+    # mock the open_in_editor method
+    mocker.patch(
+      'knards.util.open_in_editor',
+      return_value=wrong_prompt
+    )
+    # mock readchar.readkey method
+    mocker.patch('readchar.readkey', return_value='t')
+
+    # we're simulating that the buffer wasn't properly filled in and the prompt
+    # to retry got NOT 'y' -> we expect that the script will return False
+    runner.invoke(knards.main, ['new'])
+    # unfortunately, we can't check it for sure :/
+
+    assert util.open_in_editor.call_count == 1
+
+    # now for 'y'
+    mocker.patch('readchar.readkey', return_value='y')
+
+    # we're simulating that the buffer wasn't properly filled in and the prompt
+    # to retry got 'y' -> we expect that the open_in_editor will open the
+    # original prompt once more
+    runner.invoke(knards.main, ['new'])
+
+    # both methods must be invoked 2 times
+    assert util.open_in_editor.call_count == 4
+    # run 3 times because we remocked it with different return value
+    assert readchar.readkey.call_count == 3
+
+    assert util.open_in_editor.call_args_list[0][0][0] == prompt
+    assert util.open_in_editor.call_args_list[1][0][0] == prompt
+    assert util.open_in_editor.call_args_list[2][0][0] == wrong_prompt
+    assert util.open_in_editor.call_args_list[3][0][0] == wrong_prompt
 
 def test_list(mocker):
   """
