@@ -97,6 +97,7 @@ def test_new(mocker):
     assert util.open_in_editor.call_args_list[1][0][0] == question_first_output
 
     assert result.exit_code == 0
+    assert msg.NEW_CARD_SUCCESS.format(1) in result.output
 
     # now the same but for when '--af' option is specified
     mocker.patch(
@@ -110,6 +111,7 @@ def test_new(mocker):
     assert util.open_in_editor.call_args_list[1][0][0] == answer_first_output
 
     assert result.exit_code == 0
+    assert msg.NEW_CARD_SUCCESS.format(2) in result.output
 
     # check if cards were stored in the DB
     first_obj = api.get_card_by_id(1)
@@ -275,6 +277,43 @@ def test_new_retry_upon_error_behavior(mocker):
     assert util.open_in_editor.call_args_list[1][0][0] == prompt
     assert util.open_in_editor.call_args_list[2][0][0] == wrong_prompt
     assert util.open_in_editor.call_args_list[3][0][0] == wrong_prompt
+
+def test_new_create_card_failure(mocker):
+  """
+  If create_card() fails for some reason, we expect to get an appropriate
+  message withing the output text.
+  """
+  card_obj = knards.Card()
+  question_prompt = 'Markers: []\n'
+  question_prompt += 'Series: []\n'
+  question_prompt += 'No. in series: 1\n'
+  question_prompt += msg.DIVIDER_LINE + '\n'
+  question_prompt += card_obj.question + '\n'
+  question_output = 'Markers: []\n'
+  question_output += 'Series: []\n'
+  question_output += 'No. in series: 1\n'
+  question_output += msg.DIVIDER_LINE + '\n'
+  question_output += card_obj.question + '\n'
+
+  runner = CliRunner()
+  with runner.isolated_filesystem():
+    # mock the open_in_editor method
+    # it must return question_output
+    mocker.patch(
+      'knards.util.open_in_editor',
+      return_value=question_output
+    )
+    # here, we simulate the failure of create_card()
+    mocker.patch(
+      'knards.api.create_card',
+      return_value=None
+    )
+
+    # run the subcommand
+    result = runner.invoke(knards.main, ['new'])
+    # check for error message
+    assert msg.NEW_CARD_FAILURE in result.output
+
 
 def test_list(mocker):
   """
