@@ -66,8 +66,10 @@ def new(qf):
     prompt += card_obj.question + '\n'
 
     valid = False
+    retry_count = 1
+    submit_question = prompt
     while not valid:
-      submit_question = util.open_in_editor(prompt)
+      submit_question = util.open_in_editor(submit_question)
 
       if len(submit_question.split('\n')) < 5:
         submit_question += '\n' * (5 - len(submit_question.split('\n')))
@@ -100,9 +102,16 @@ def new(qf):
         # offset one line downwards to make output more readable
         print()
 
+        # allow 3 retries max (anti infinite loop)
+        retry_count += 1
+        if retry_count > 3:
+          return False
+
     valid = False
+    retry_count = 1
+    submit_answer = submit_question
     while not valid:
-      submit_answer = util.open_in_editor(submit_question)
+      submit_answer = util.open_in_editor(submit_answer)
 
       if len(submit_answer.split('\n')) < 5:
         submit_answer += '\n' * (5 - len(submit_answer.split('\n')))
@@ -134,6 +143,11 @@ def new(qf):
 
         # offset one line downwards to make output more readable
         print()
+
+        # allow 3 retries max (anti infinite loop)
+        retry_count += 1
+        if retry_count > 3:
+          return False
 
     question_text = ''
     for index, line in enumerate(submit_question.split('\n')):
@@ -169,8 +183,10 @@ def new(qf):
     prompt += card_obj.answer + '\n'
 
     valid = False
+    retry_count = 1
+    submit_answer = prompt
     while not valid:
-      submit_answer = util.open_in_editor(prompt)
+      submit_answer = util.open_in_editor(submit_answer)
 
       if len(submit_answer.split('\n')) < 5:
         submit_answer += '\n' * (5 - len(submit_answer.split('\n')))
@@ -203,9 +219,16 @@ def new(qf):
         # offset one line downwards to make output more readable
         print()
 
+        # allow 3 retries max (anti infinite loop)
+        retry_count += 1
+        if retry_count > 3:
+          return False
+
     valid = False
+    retry_count = 1
+    submit_question = submit_answer
     while not valid:
-      submit_question = util.open_in_editor(submit_answer)
+      submit_question = util.open_in_editor(submit_question)
 
       if len(submit_question.split('\n')) < 5:
         submit_question += '\n' * (5 - len(submit_question.split('\n')))
@@ -237,6 +260,11 @@ def new(qf):
 
         # offset one line downwards to make output more readable
         print()
+
+        # allow 3 retries max (anti infinite loop)
+        retry_count += 1
+        if retry_count > 3:
+          return False
 
     question_text = ''
     for index, line in enumerate(submit_question.split('\n')):
@@ -294,7 +322,8 @@ def list(q, a, inc, exc):
   buf = ''
   for card in card_set:
     if card.date_updated is not None:
-      date_updated = datetime.strptime(card.date_updated, '%Y-%m-%d').strftime('%d %b %Y')
+      date_updated = \
+        datetime.strptime(card.date_updated, '%Y-%m-%d').strftime('%d %b %Y')
     else:
       date_updated = 'Never'
     buf += msg.CARD_LIST_TEMPLATE.format(
