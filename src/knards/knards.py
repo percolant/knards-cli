@@ -341,7 +341,3 @@ def list(q, a, inc, exc):
     )
 
   util.open_in_editor(buf)
-
-
-if __name__ == '__main__':
-  main()
