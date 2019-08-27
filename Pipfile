@@ -7,7 +7,6 @@ verify_ssl = true
 httpretty = "*"
 pytest = "*"
 selenium = "*"
-pytest-django = "*"
 pytest-xdist = "*"
 pytest-watch = "*"
 pytest-mock = "*"
