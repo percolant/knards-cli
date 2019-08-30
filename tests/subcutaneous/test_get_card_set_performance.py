@@ -1,11 +1,14 @@
 import pytest
 
-from knards import knards, api, config, msg, util
+from knards import knards, api
+
 
 @pytest.mark.onetimeish
 def test_performance_on_11000_cards(init_db):
   """
-  TODO
+  In this test we simulate a creation of 11000 cards (and storing them in the
+  DB) and the following fetching for them in the DB, with respect to different
+  constraints specified.
   """
   for i in range(10000):
     api.create_card(knards.Card(markers='first second third'), init_db)
@@ -27,7 +30,9 @@ def test_performance_on_11000_cards(init_db):
 
 def test_performance_on_1100_cards(init_db):
   """
-  TODO
+  In this test we simulate a creation of 1100 cards (and storing them in the
+  DB) and the following fetching for them in the DB, with respect to different
+  constraints specified.
   """
   for i in range(1000):
     api.create_card(knards.Card(markers='first second third'), init_db)
