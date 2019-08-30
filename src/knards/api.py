@@ -1,8 +1,5 @@
 from datetime import datetime, date
-import readchar
 import sqlite3
-import subprocess
-import tempfile
 
 from knards import knards, config, msg, util
 
