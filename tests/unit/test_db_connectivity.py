@@ -9,6 +9,7 @@ def test_db_connect_with_permission_denied():
   script has no permissions to access it -> error is printed out (tested in
   CLI tests) and None is returned.
   """
+  # we can never (almost) access /test.db
   connection = util.db_connect('/test.db')
   assert connection is None
 
