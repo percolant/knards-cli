@@ -10,6 +10,7 @@ NEW_CARD_SUCCESS = 'Card #{} was successfully created.'
 
 # FAILURE MESSAGES
 DB_ALREADY_EXISTS = '{} already exists!'
+DB_PATH_MUST_BE_STR = 'db_path input arg must of type str'
 CANNOT_CREATE_CARD = 'Could not store the card in the DB due to an error.'
 CANNOT_CREATE_DB = '{} already exists, remove it first (or change the name of \
 DB in config.py), then run this command again.'
