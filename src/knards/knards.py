@@ -4,6 +4,7 @@ import click
 from datetime import datetime
 from collections import namedtuple
 import readchar
+import sys
 
 from knards import api, msg, util
 
@@ -48,13 +49,28 @@ def bootstrap_db():
   Initialize the DB.
   Launch this if you haven't got the file with DB (see config.py to set its name)
   """
-  api.bootstrap_db()
+  if not api.bootstrap_db():
+    sys.exit(1)
 
 @main.command()
 @click.option('--qf/--af', default=True, help='What should be prompted for first? Question or answer?')
 def new(qf):
   """
   Prompt to create a new card.
+
+  $ kn new
+  Opens a "question-first" buffer in editor, processes what's in the buffer
+  after "save & exit", sends into the second buffer (for answer), processes
+  what's returned by that, checks if the format is OK, splits up metadata and
+  card's text, generates an object of type knards.Card and feeds it to the
+  create_card()
+
+  $ kn new --af
+  Opens a "answer-first" buffer in editor, processes what's in the buffer
+  after "save & exit", sends into the second buffer (for question), processes
+  what's returned by that, checks if the format is OK, splits up metadata and
+  card's text, generates an object of type knards.Card and feeds it to the
+  create_card()
   """
   card_obj = Card()
 
@@ -97,7 +113,7 @@ def new(qf):
         print(msg.RETRY)
         retry = readchar.readkey()
         if retry != 'y':
-          return False
+          sys.exit(1)
 
         # offset one line downwards to make output more readable
         print()
@@ -105,7 +121,7 @@ def new(qf):
         # allow 3 retries max (anti infinite loop)
         retry_count += 1
         if retry_count > 3:
-          return False
+          sys.exit(1)
 
     valid = False
     retry_count = 1
@@ -139,7 +155,7 @@ def new(qf):
         print(msg.RETRY)
         retry = readchar.readkey()
         if retry != 'y':
-          return False
+          sys.exit(1)
 
         # offset one line downwards to make output more readable
         print()
@@ -147,7 +163,7 @@ def new(qf):
         # allow 3 retries max (anti infinite loop)
         retry_count += 1
         if retry_count > 3:
-          return False
+          sys.exit(1)
 
     question_text = ''
     for index, line in enumerate(submit_question.split('\n')):
@@ -214,7 +230,7 @@ def new(qf):
         print(msg.RETRY)
         retry = readchar.readkey()
         if retry != 'y':
-          return False
+          sys.exit(1)
 
         # offset one line downwards to make output more readable
         print()
@@ -222,7 +238,7 @@ def new(qf):
         # allow 3 retries max (anti infinite loop)
         retry_count += 1
         if retry_count > 3:
-          return False
+          sys.exit(1)
 
     valid = False
     retry_count = 1
@@ -256,7 +272,7 @@ def new(qf):
         print(msg.RETRY)
         retry = readchar.readkey()
         if retry != 'y':
-          return False
+          sys.exit(1)
 
         # offset one line downwards to make output more readable
         print()
@@ -264,7 +280,7 @@ def new(qf):
         # allow 3 retries max (anti infinite loop)
         retry_count += 1
         if retry_count > 3:
-          return False
+          sys.exit(1)
 
     question_text = ''
     for index, line in enumerate(submit_question.split('\n')):
