@@ -69,9 +69,17 @@ def get_card_set(
 
   Outputs a list of objects of type knards.Card
   """
+  if not isinstance(revisable_only, bool) or \
+    not isinstance(today, bool) or \
+    not isinstance(show_question, bool) or \
+    not isinstance(show_answer, bool) or \
+    not isinstance(include_markers, list) or \
+    not isinstance(exclude_markers, list):
+    return []
+
   connection = util.db_connect(db_path)
   if not connection:
-    return None
+    return []
 
   cursor = connection.cursor()
 
@@ -206,6 +214,26 @@ def get_card_by_id(card_id, db_path=config.DB):
       card[index] = prop
 
   card_obj = knards.Card(*card)
+  return card_obj
+
+def get_last_card(db_path=config.DB):
+  """
+  Get the last stored in the DB card.
+  TODO: get last card for marker.
+  """
+  connection = util.db_connect(db_path)
+  if not connection:
+    return None
+
+  cursor = connection.cursor()
+
+  with connection:
+    cursor.execute("""
+      SELECT * FROM cards WHERE id = (SELECT MAX(id) FROM cards WHERE date_created = (SELECT MAX(date_created) FROM cards))
+    """)
+    card_obj = knards.Card(*list(cursor.fetchone()))
+
+  connection.close()
   return card_obj
 
 def create_card(card_obj, db_path=config.DB):
