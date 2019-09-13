@@ -8,7 +8,6 @@ import sys
 
 from knards import api, msg, util
 
-
 # card object blueprint
 Card = namedtuple(
   'Card',
@@ -43,6 +42,7 @@ Card.__new__.__defaults__ = (
 def main():
   pass
 
+
 @main.command()
 def bootstrap_db():
   """
@@ -52,9 +52,15 @@ def bootstrap_db():
   if not api.bootstrap_db():
     sys.exit(1)
 
+
 @main.command()
-@click.option('--qf/--af', default=True, help='What should be prompted for first? Question or answer?')
-def new(qf):
+@click.option(
+  '--qf/--af',
+  default=True,
+  help='What should be prompted for first? Question or answer?'
+)
+@click.option('--copy-last', default=False, is_flag=True)
+def new(qf, copy_last):
   """
   Prompt to create a new card.
 
@@ -72,13 +78,20 @@ def new(qf):
   card's text, generates an object of type knards.Card and feeds it to the
   create_card()
   """
-  card_obj = Card()
-
-  if qf:
+  if copy_last:
+    card_obj = api.get_last_card()
+    prompt = 'Markers: [{}]\n'.format(card_obj.markers)
+    prompt += 'Series: [{}]\n'.format(card_obj.series)
+    prompt += 'No. in series: {}\n'.format(card_obj.pos_in_series)
+  else:
+    card_obj = Card()
     prompt = 'Markers: []\n'
     prompt += 'Series: []\n'
     prompt += 'No. in series: 1\n'
-    prompt += msg.DIVIDER_LINE + '\n'
+
+  prompt += msg.DIVIDER_LINE + '\n'
+
+  if qf:
     prompt += card_obj.question + '\n'
 
     valid = False
@@ -170,7 +183,7 @@ def new(qf):
       if index > 3:
         question_text += line + '\n'
     else:
-        card_obj = card_obj._replace(question=question_text)
+      card_obj = card_obj._replace(question=question_text)
 
     answer_text = ''
     for index, line in enumerate(submit_answer.split('\n')):
@@ -183,7 +196,7 @@ def new(qf):
       if index > 3:
         answer_text += line + '\n'
     else:
-        card_obj = card_obj._replace(answer=answer_text)
+      card_obj = card_obj._replace(answer=answer_text)
 
     card_id = api.create_card(card_obj)
     if card_id:
@@ -192,10 +205,6 @@ def new(qf):
       print(msg.NEW_CARD_FAILURE)
 
   else:
-    prompt = 'Markers: []\n'
-    prompt += 'Series: []\n'
-    prompt += 'No. in series: 1\n'
-    prompt += msg.DIVIDER_LINE + '\n'
     prompt += card_obj.answer + '\n'
 
     valid = False
@@ -293,14 +302,14 @@ def new(qf):
       if index > 3:
         question_text += line + '\n'
     else:
-        card_obj = card_obj._replace(question=question_text)
+      card_obj = card_obj._replace(question=question_text)
 
     answer_text = ''
     for index, line in enumerate(submit_answer.split('\n')):
       if index > 3:
         answer_text += line + '\n'
     else:
-        card_obj = card_obj._replace(answer=answer_text)
+      card_obj = card_obj._replace(answer=answer_text)
 
     card_id = api.create_card(card_obj)
     if card_id:
@@ -308,11 +317,28 @@ def new(qf):
     else:
       print(msg.NEW_CARD_FAILURE)
 
+
 @main.command()
-@click.option('--q/--no-q', default=True, help='Should the output include the question text?')
-@click.option('--a/--no-a', default=True, help='Should the output include the answer text?')
-@click.option('--inc', help='A marker or a list of markers. Only cards that contain ALL of those markers will be output')
-@click.option('--exc', help='A marker or a list of markers. Only cards that do not contain NEITHER of those markers will be output')
+@click.option(
+  '--q/--no-q',
+  default=True,
+  help='Should the output include the question text?'
+)
+@click.option(
+  '--a/--no-a',
+  default=True,
+  help='Should the output include the answer text?'
+)
+@click.option(
+  '--inc',
+  help='A marker or a list of markers. Only cards that contain ALL of those \
+markers will be output'
+)
+@click.option(
+  '--exc',
+  help='A marker or a list of markers. Only cards that do not contain NEITHER \
+of those markers will be output'
+)
 def list(q, a, inc, exc):
   """
   Output a set of cards in the set up editor.
