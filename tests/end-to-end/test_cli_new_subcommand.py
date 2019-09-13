@@ -1,5 +1,6 @@
 from click.testing import CliRunner
 import pytest
+import sys
 import readchar
 
 from knards import knards, api, util
@@ -350,6 +351,74 @@ def test_max_amount_of_retries_is_3(
     assert util.open_in_editor.call_count == 3
     assert readchar.readkey.call_count == 3
     assert result.exit_code == 1
+
+def test_copy_last_argument_invokes_first_prompt_with_copy_of_last_cards_text(
+  mocker,
+  init_db
+):
+  """
+  $ kn new --qf --copy-last
+  must prompt for a new card, "question-first" mode; the prompt must be
+  prepopulated with data copied from the last stored card.
+  """
+  runner = CliRunner()
+  with runner.isolated_filesystem():
+    # create the DB
+    runner.invoke(knards.main, ['bootstrap-db'])
+
+    # create some card objs
+    card_obj_first = knards.Card(
+      markers='pytest',
+      series='',
+      pos_in_series=1,
+      question='some_text',
+      answer='some_text_2'
+    )
+    card_obj_last = knards.Card(
+      markers='python test',
+      series='test_series',
+      pos_in_series=3,
+      question='test_quest',
+      answer='test_answer'
+    )
+    api.create_card(card_obj_first, init_db)
+    api.create_card(card_obj_last, init_db)
+
+    # trigger method fail upon first invocation of util.open_in_editor()
+    mocker.patch(
+      'knards.util.open_in_editor',
+      side_effect=ValueError
+    )
+    mocker.patch(
+      'knards.api.get_last_card',
+      return_value=api.get_last_card(init_db)
+    )
+
+    # invoke the subcommand with respective options
+    runner.invoke(knards.main, ['new', '--qf', '--copy-last'])
+    assert api.get_last_card.call_count == 1
+    assert util.open_in_editor.call_count == 1
+    assert 'Markers: [{}]'.format(card_obj_last.markers) in \
+        util.open_in_editor.call_args_list[0][0][0]
+    assert 'Series: [{}]'.format(card_obj_last.series) in \
+        util.open_in_editor.call_args_list[0][0][0]
+    assert 'No. in series: {}'.format(card_obj_last.pos_in_series) in \
+        util.open_in_editor.call_args_list[0][0][0]
+    assert 'test_quest' in util.open_in_editor.call_args_list[0][0][0]
+
+@pytest.mark.skip(reason="TODO in future")
+def test_cant_type_in_nonint_to_pos_in_series_field():
+  """
+  TODO
+  """
+  pass
+
+@pytest.mark.skip(reason="TODO in future")
+def test_cant_get_last_card_from_empty_DB():
+  """
+  TODO
+  """
+  pass
 
 @pytest.mark.skip(reason="TODO in future")
 def test_fields_cant_be_empty_in_a_saved_card():
