@@ -26,7 +26,7 @@ def test_card_obj_sent_to_update_card_gets_properly_updated(init_db):
   the DB.
   """
   initial_card_obj = knards.Card()
-  initial_card_id = api.create_card(card_obj, init_db)
+  initial_card_id = api.create_card(initial_card_obj, init_db)
 
   stored_card_obj = api.get_card_by_id(initial_card_id, init_db)
   stored_card_obj._replace(question='new contents', score=12)
