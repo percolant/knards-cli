@@ -7,7 +7,7 @@ from knards import knards, config, msg, util
 def bootstrap_db(db_path=config.DB):
   """
   Creates the DB file and creates the "cards" table in it if there's no file
-  with the name passed as the argument. Else returns False.
+  with the name passed as the argument. Otherwise returns False.
   """
   if type(db_path) is not str:
     print(msg.DB_PATH_MUST_BE_STR)
@@ -67,7 +67,7 @@ def get_card_set(
   cards may have.
   6. today - only output cards that were already revised today.
 
-  Outputs a list of objects of type knards.Card
+  Outputs a list of objects of type knards.Card or [] upon failure.
   """
   if not isinstance(revisable_only, bool) or \
     not isinstance(today, bool) or \
@@ -216,10 +216,20 @@ def get_card_by_id(card_id, db_path=config.DB):
   card_obj = knards.Card(*card)
   return card_obj
 
-def get_last_card(db_path=config.DB):
+def get_last_card(markers=None, db_path=config.DB):
   """
-  Get the last stored in the DB card.
-  TODO: get last card for marker.
+  Takes in:
+  1. A list of strings that represent the set of markers that all the affected
+  card objects must contain.
+  2. A path to the DB file (optional, defaults to config.DB)
+
+  If 'markers' is not passed in, returns a knards.Card object that's a copy of
+  the most recently created card. If 'markers' is passed in, returns a
+  knards.Card object that's a copy of the most recently created card that
+  contains ALL of the specified markers.
+
+  Returns None upon if the DB is empty or if no cards contain all of the
+  specified markers (if 'markers' were passed in)
   """
   connection = util.db_connect(db_path)
   if not connection:
@@ -285,9 +295,13 @@ def create_card(card_obj, db_path=config.DB):
   connection.close()
   return created_with_id
 
-def update_card(card_obj):
+def update_card(card_obj, db_path=config.DB):
   """
-  TODO
+  Takes in:
+  1. An object of type knards.Card
+  2. A path to the DB file (optional, defaults to config.DB)
+
+  Returns True upon success and False upon failure.
   """
   if type(card_obj) is not knards.Card:
     raise TypeError('Input arg must be of type Card')
@@ -296,13 +310,17 @@ def update_card(card_obj):
 
 def delete_card(card_id=None, markers=None, db_path=config.DB):
   """
-  Deletes a card specified by id if id is passed as the argument.
-  Deletes a set of cards that contain all markers sent as the 'markers'
+  Takes in:
+  1. An integer number representing an id of an existing card object.
+  2. A list of strings representing a set of markers that all the affected card
+  objects must contain.
+  3. A path to the DB file (optional, defaults to config.DB)
+
+  Deletes a card specified by card_id.
+  Deletes a set of cards that contain ALL markers sent as the 'markers'
   argument.
   Deletes a card specified by id if both 'card_id' and 'markers' args are
   passed in. Ignores 'markers'
-
-  Third argument is a path to the DB file (optional, defaults to config.DB)
 
   Returns True upon success and False upon failure.
   """

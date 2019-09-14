@@ -6,6 +6,7 @@ from knards import knards, api
 def test_fail_if_input_arg_is_not_a_proper_card_object(init_db):
   """
   update_card() takes in only one argument and it must be of type knards.Card
+  update_card() always returns a boolean value.
   """
   card_obj = knards.Card()
   card_id = api.create_card(card_obj, init_db)
