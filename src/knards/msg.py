@@ -24,6 +24,8 @@ INPUT_ARG_MUST_BE_CARD = 'Input argument must be an object of type knards.Card'
 NEW_CARD_FAILURE = 'Couldn\'t save the card to the DB. Make sure the file \
 with it does exist.'
 CARD_BY_ID_NOT_FOUND = 'Card #{} doesn\'t exist in the DB.'
+CARDS_BY_MARKERS_NOT_FOUND = 'No cards containing markers "{}" has been found \
+in the DB.'
 
 RETRY = 'Retry? (press \'y\' to retry or any other key to abort)'
 CLI_ERROR_DONT_CHANGE_MARKERS = 'Don\'t change the structure of the prompt \

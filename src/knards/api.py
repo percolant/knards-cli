@@ -231,6 +231,16 @@ def get_last_card(markers=None, db_path=config.DB):
   Returns None upon if the DB is empty or if no cards contain all of the
   specified markers (if 'markers' were passed in)
   """
+  if markers:
+    if type(markers) is not list:
+      print(msg.MARKERS_MUST_BE_LIST)
+      return None
+    else:
+      for elem in markers:
+        if type(elem) is not str:
+          print(msg.MARKERS_MUST_BE_LIST)
+          return None
+
   connection = util.db_connect(db_path)
   if not connection:
     return None
@@ -238,12 +248,50 @@ def get_last_card(markers=None, db_path=config.DB):
   cursor = connection.cursor()
 
   with connection:
-    cursor.execute("""
-      SELECT * FROM cards WHERE id = (SELECT MAX(id) FROM cards WHERE date_created = (SELECT MAX(date_created) FROM cards))
-    """)
-    card_obj = knards.Card(*list(cursor.fetchone()))
+    if not markers:
+      cursor.execute("""
+        SELECT * FROM cards WHERE id = (SELECT MAX(id) FROM cards WHERE \
+date_created = (SELECT MAX(date_created) FROM cards))
+      """)
+      card = cursor.fetchone()
+      if card:
+        card_obj = knards.Card(*list(card))
+    else:
+      card_set = get_card_set()
+      cards_to_pick_from = []
+
+      # sift in only cards that contain all of the specified markers
+      for card in card_set:
+        has_markers = card.markers.split()
+        for marker in markers:
+          if marker not in has_markers:
+            break
+        else:
+          cards_to_pick_from.append(card)
+
+      if not cards_to_pick_from:
+        print(msg.CARDS_BY_MARKERS_NOT_FOUND.format(', '.join(markers)))
+        return None
+
+      # find out the most recent date of addition of a card with specified markers
+      max_date = cards_to_pick_from[0].date_created
+      for card in cards_to_pick_from:
+        if card.date_created > max_date:
+          max_date = card.date_created
+
+      # find out the max card id among the sifted in cards
+      card_with_max_id = knards.Card(id=0)
+      for card in cards_to_pick_from:
+        if card.date_created == max_date and card.id > card_with_max_id.id:
+          card_with_max_id = card
+
+      card_obj = card_with_max_id
+      card = 'This is a shitty algorithm, rewrite it!'
 
   connection.close()
+  if not card:
+    return None
+
   return card_obj
 
 def create_card(card_obj, db_path=config.DB):
