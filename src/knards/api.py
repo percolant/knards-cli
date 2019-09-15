@@ -329,10 +329,19 @@ def delete_card(card_id=None, markers=None, db_path=config.DB):
       print(msg.CARD_ID_MUST_BE_INT)
       return False
 
-  elif markers:
-    if type(markers) is not str:
-      print(msg.MARKERS_MUST_BE_STR)
+    if not get_card_by_id(card_id):
+      print(msg.CARD_BY_ID_NOT_FOUND.format(card_id))
       return False
+
+  elif markers:
+    if type(markers) is not list:
+      print(msg.MARKERS_MUST_BE_LIST)
+      return False
+    else:
+      for elem in markers:
+        if type(elem) is not str:
+          print(msg.MARKERS_MUST_BE_LIST)
+          return False
 
   connection = util.db_connect(db_path)
   if not connection:
@@ -347,7 +356,23 @@ def delete_card(card_id=None, markers=None, db_path=config.DB):
       """.format(card_id))
 
   elif markers:
-    pass
+    ids_to_delete = []
+
+    card_set = get_card_set()
+
+    for card in card_set:
+      has_markers = card.markers.split()
+      for marker in markers:
+        if marker not in has_markers:
+          break
+      else:
+        ids_to_delete.append(card.id)
+
+    for id in ids_to_delete:
+      with connection:
+        cursor.execute("""
+          DELETE FROM cards WHERE id = {}
+        """.format(id))
 
   connection.close()
   return True
