@@ -305,11 +305,11 @@ def create_card(card_obj, db_path=config.DB):
   """
   if type(card_obj) is not knards.Card:
     print(msg.INPUT_ARG_MUST_BE_CARD)
-    return None
+    return False
 
   connection = util.db_connect(db_path)
   if not connection:
-    return None
+    return False
 
   cursor = connection.cursor()
 
@@ -330,7 +330,7 @@ def create_card(card_obj, db_path=config.DB):
 
     card_obj = card_obj._replace(id=free_id)
 
-  created_with_id = None
+  created_with_id = False
   with connection:
     try:
       cursor.execute("""
