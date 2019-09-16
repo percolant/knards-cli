@@ -72,8 +72,13 @@ def test_method_returns_a_proper_card_obj_upon_success(mocker, init_db):
   """
   card_obj1 = knards.Card(markers='python specific test')
   card_obj2 = knards.Card(markers='javascript specific')
+  card_obj3 = knards.Card(
+    markers='javascript specific test',
+    date_created=(datetime.today() - timedelta(1)).strftime('%Y-%m-%d')
+  )
   api.create_card(card_obj1, init_db)
   api.create_card(card_obj2, init_db)
+  api.create_card(card_obj3, init_db)
 
   mocker.patch(
     'knards.api.get_card_set',
