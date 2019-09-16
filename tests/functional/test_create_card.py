@@ -3,6 +3,22 @@ from datetime import datetime, timedelta
 from knards import knards, api
 
 
+def test_input_arg_must_be_a_card_obj(init_db):
+  """
+  create_card() takes in only one argument and it must be of type knards.Card
+  create_card() returns False upon failure.
+  create_card() returns created card's id upon success.
+  """
+  result = api.create_card(111, init_db)
+  assert result is False
+
+  result = api.create_card('111', init_db)
+  assert result is False
+
+  card_obj = knards.Card()
+  result = api.create_card(card_obj, init_db)
+  assert result == 1
+
 def test_create_card_return_valid_id(init_db):
   """
   api.create_card() takes in a knards.Card object, stores it in the DB and
