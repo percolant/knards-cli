@@ -274,10 +274,11 @@ date_created = (SELECT MAX(date_created) FROM cards))
         return None
 
       # find out the most recent date of addition of a card with specified markers
-      max_date = cards_to_pick_from[0].date_created
+      max_date = datetime(1970, 1, 1)
       for card in cards_to_pick_from:
-        if card.date_created > max_date:
-          max_date = card.date_created
+        if datetime.strptime(card.date_created, '%Y-%m-%d') > max_date:
+          max_date = datetime.strptime(card.date_created, '%Y-%m-%d')
+      max_date = max_date.strftime('%Y-%m-%d')
 
       # find out the max card id among the sifted in cards
       card_with_max_id = knards.Card(id=0)
