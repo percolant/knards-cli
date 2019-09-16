@@ -211,7 +211,7 @@ def get_card_by_id(card_id, db_path=config.DB):
   card = list(card)
   for index, prop in enumerate(card):
     if isinstance(prop, date):
-      card[index] = prop
+      card[index] = prop.strftime('%Y-%m-%d')
 
   card_obj = knards.Card(*card)
   return card_obj
@@ -352,9 +352,46 @@ def update_card(card_obj, db_path=config.DB):
   Returns True upon success and False upon failure.
   """
   if type(card_obj) is not knards.Card:
-    raise TypeError('Input arg must be of type Card')
+    print(msg.INPUT_ARG_MUST_BE_CARD)
+    return False
 
-  return True
+  connection = util.db_connect(db_path)
+  if not connection:
+    return False
+
+  cursor = connection.cursor()
+
+  updated = False
+  with connection:
+    try:
+      cursor.execute("""
+        UPDATE cards SET question = ?,
+                         answer = ?,
+                         markers = ?,
+                         series = ?,
+                         pos_in_series = ?,
+                         date_updated = ?,
+                         score = ?
+                     WHERE id = ?
+      """, (
+        card_obj.question,
+        card_obj.answer,
+        card_obj.markers,
+        card_obj.series,
+        card_obj.pos_in_series,
+        datetime.today().strftime('%Y-%m-%d'),
+        card_obj.score,
+        card_obj.id
+      ))
+      updated = True
+    except sqlite3.IntegrityError:
+      print(msg.CANNOT_CREATE_CARD)
+
+  connection.close()
+  if updated:
+    return True
+  else:
+    return False
 
 def delete_card(card_id=None, markers=None, db_path=config.DB):
   """
