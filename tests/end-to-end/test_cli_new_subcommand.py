@@ -391,7 +391,7 @@ def test_copy_last_argument_invokes_first_prompt_with_copy_of_last_cards_text(
     )
     mocker.patch(
       'knards.api.get_last_card',
-      return_value=api.get_last_card(init_db)
+      return_value=api.get_last_card(db_path=init_db)
     )
 
     # invoke the subcommand with respective options
