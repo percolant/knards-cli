@@ -394,7 +394,7 @@ def test_copy_last_argument_invokes_first_prompt_with_copy_of_last_cards_text(
       return_value=api.get_last_card(db_path=init_db)
     )
 
-    # invoke the subcommand with respective options
+    # invoke the subcommand with respective options, "question-first" mode
     runner.invoke(knards.main, ['new', '--qf', '--copy-last'])
     assert api.get_last_card.call_count == 1
     assert util.open_in_editor.call_count == 1
@@ -405,6 +405,14 @@ def test_copy_last_argument_invokes_first_prompt_with_copy_of_last_cards_text(
     assert 'No. in series: {}'.format(card_obj_last.pos_in_series) in \
         util.open_in_editor.call_args_list[0][0][0]
     assert 'test_quest' in util.open_in_editor.call_args_list[0][0][0]
+    assert 'test_answer' not in util.open_in_editor.call_args_list[0][0][0]
+
+    # invoke the subcommand with respective options, "answer-first" mode
+    runner.invoke(knards.main, ['new', '--af', '--copy-last'])
+    assert api.get_last_card.call_count == 2
+    assert util.open_in_editor.call_count == 2
+    assert 'test_answer' in util.open_in_editor.call_args_list[1][0][0]
+    assert 'test_quest' not in util.open_in_editor.call_args_list[1][0][0]
 
 @pytest.mark.skip(reason="TODO in future")
 def test_cant_type_in_nonint_to_pos_in_series_field():
