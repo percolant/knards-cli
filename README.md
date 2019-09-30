@@ -39,8 +39,8 @@ Delete card with id 1.
 Delete all cards that have marker "python".
 
 `$ kn edit --id=1`
+
 Edit card with id 1.
-Also, you may specify question/answer to be prompted first: `$ kn edit --id=1 --af` (default is `--qf`)
 
 `$ kn status`
 Show how many cards are ready to be revised.
