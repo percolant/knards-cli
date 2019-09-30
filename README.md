@@ -32,15 +32,23 @@ Prompt for new card creation, start with answer.
 Copy last created card that has marker "python".
 Also, you may specify question/answer to be prompted first: `$ kn copy --m=python --af` (default is `--qf`)
 
+---
+
 `$ kn del --id=1`
+
 Delete card with id 1.
 
 `$ kn del --m=python`
+
 Delete all cards that have marker "python".
+
+---
 
 `$ kn edit --id=1`
 
 Edit card with id 1.
+
+---
 
 `$ kn status`
 Show how many cards are ready to be revised.
