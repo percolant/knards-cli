@@ -383,3 +383,104 @@ def list(q, a, inc, exc):
     )
 
   util.open_in_editor(buf)
+
+
+@main.command()
+@click.option(
+  '--id',
+  'card_id',
+  required=True,
+  help='A number. The id of the card to edit'
+)
+def edit(card_id):
+  """
+  Open a card for edit. Then update it in the DB.
+  """
+  try:
+    card_obj = api.get_card_by_id(int(card_id))
+  except ValueError as e:
+    print(e.args[0])
+    sys.exit(1)
+
+  prompt = 'Markers: [{}]\n'.format(card_obj.markers)
+  prompt += 'Series: [{}]\n'.format(card_obj.series)
+  prompt += 'No. in series: {}\n'.format(card_obj.pos_in_series)
+
+  prompt += msg.DIVIDER_LINE + '\n'
+  prompt += card_obj.question + '\n'
+  prompt += msg.DIVIDER_LINE + '\n'
+  prompt += card_obj.answer + '\n'
+
+  valid = False
+  retry_count = 1
+  submit = prompt
+  while not valid:
+    submit = util.open_in_editor(submit)
+
+    if len(submit.split('\n')) < 5:
+      submit += '\n' * (5 - len(submit.split('\n')))
+
+    for index, line in enumerate(submit.split('\n')):
+      if index == 0 and 'Markers: [' not in line:
+        print(msg.CLI_ERROR_DONT_CHANGE_MARKERS)
+        break
+      if index == 1 and 'Series: [' not in line:
+        print(msg.CLI_ERROR_DONT_CHANGE_SERIES)
+        break
+      if index == 2 and 'No. in series: ' not in line:
+        print(msg.CLI_ERROR_DONT_CHANGE_POS_IN_SERIES)
+        break
+      if index == 3 and line != msg.DIVIDER_LINE:
+        print(msg.CLI_ERROR_DONT_CHANGE_DIVIDER_LINE)
+        break
+    else:
+      valid = True
+
+    if submit.count(msg.DIVIDER_LINE) > 2:
+      print(msg.CLI_ERROR_TOO_MANY_DIVIDER_LINES)
+      valid = False
+
+    if not valid:
+      print(msg.RETRY)
+      retry = readchar.readkey()
+      if retry != 'y':
+        sys.exit(1)
+
+      # offset one line downwards to make output more readable
+      print()
+
+      # allow 3 retries max (anti infinite loop)
+      retry_count += 1
+      if retry_count > 3:
+        sys.exit(1)
+
+  # remove redundant empty lines on either side
+  submit_meta = submit.split(msg.DIVIDER_LINE)[0].strip('\n').split('\n')
+  submit_question = submit.split(msg.DIVIDER_LINE)[1].strip('\n').split('\n')
+  submit_answer = submit.split(msg.DIVIDER_LINE)[2].strip('\n').split('\n')
+
+  for index, line in enumerate(submit_meta):
+    if index == 0:
+      card_obj = card_obj._replace(markers=line.split('[')[1].split(']')[0])
+    if index == 1:
+      card_obj = card_obj._replace(series=line.split('[')[1].split(']')[0])
+    if index == 2:
+      card_obj = card_obj._replace(pos_in_series=int(line.split(':')[1][1:]))
+
+  question_text = ''
+  for index, line in enumerate(submit_question):
+    question_text += line + '\n'
+  else:
+    card_obj = card_obj._replace(question=question_text)
+
+  answer_text = ''
+  for index, line in enumerate(submit_answer):
+    answer_text += line + '\n'
+  else:
+    card_obj = card_obj._replace(answer=answer_text)
+
+  updated = api.update_card(card_obj)
+  if updated:
+    print(msg.EDIT_CARD_SUCCESS.format(card_id))
+  else:
+    print(msg.EDIT_CARD_FAILURE)
