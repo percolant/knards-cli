@@ -7,6 +7,7 @@ CARD_LIST_TEMPLATE = '''=== #{} | {} | #{} in "{}" | {} | {} | {} ===\n\
 # SUCCESS MESSAGES
 BOOTSTRAP_DB_SUCCESS = '{} was successfully created.'
 NEW_CARD_SUCCESS = 'Card #{} was successfully created.'
+EDIT_CARD_SUCCESS = 'Card #{} was successfully updated.'
 
 # FAILURE MESSAGES
 DB_ALREADY_EXISTS = '{} already exists!'
@@ -23,6 +24,7 @@ MARKERS_MUST_BE_LIST = 'Markers must be a list of strings.'
 INPUT_ARG_MUST_BE_CARD = 'Input argument must be an object of type knards.Card'
 NEW_CARD_FAILURE = 'Couldn\'t save the card to the DB. Make sure the file \
 with it does exist.'
+EDIT_CARD_FAILURE = 'Couldn\'t save the card to the DB.'
 CARD_BY_ID_NOT_FOUND = 'Card #{} doesn\'t exist in the DB.'
 CARDS_BY_MARKERS_NOT_FOUND = 'No cards containing markers "{}" has been found \
 in the DB.'
