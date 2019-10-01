@@ -53,7 +53,7 @@ def test_buffer_contains_metadata_question_and_answer(mocker):
     api.create_card(card_obj1, db_path)
     api.create_card(card_obj2, db_path)
 
-    mocker.patch('knards.util.open_in_editor')
+    mocker.patch('knards.util.open_in_editor', side_effect=ValueError)
     mocker.patch(
       'knards.api.get_card_by_id',
       return_value=api.get_card_by_id(2, db_path=db_path)
@@ -61,13 +61,15 @@ def test_buffer_contains_metadata_question_and_answer(mocker):
 
     # invoke the subcommand
     result = runner.invoke(knards.main, ['edit', '--id', '2'])
-    assert result.exit_code == 0
+    assert result.exit_code == 1
     assert card_obj2.markers in util.open_in_editor.call_args_list[0][0][0]
     assert card_obj2.series in util.open_in_editor.call_args_list[0][0][0]
-    assert card_obj2.pos_in_series in util.open_in_editor.call_args_list[0][0][0]
+    assert str(card_obj2.pos_in_series) in \
+      util.open_in_editor.call_args_list[0][0][0]
     assert card_obj2.question in util.open_in_editor.call_args_list[0][0][0]
     assert card_obj2.answer in util.open_in_editor.call_args_list[0][0][0]
-    assert util.open_in_editor.call_args_list[0][0][0].count('msg.DIVIDER_LINE') == 2
+    assert \
+      util.open_in_editor.call_args_list[0][0][0].count(msg.DIVIDER_LINE) == 2
 
 def test_card_is_successfully_saved_into_db(
   mocker,
