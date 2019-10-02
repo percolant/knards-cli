@@ -1,3 +1,4 @@
+import click
 from click.testing import CliRunner
 import pytest
 import os
@@ -5,30 +6,58 @@ import os
 from knards import knards, api, util, config, msg
 
 
-def test_without_id_specified(
-  mocker,
-):
+def test_without_id_specified():
   """
-  If no id is specified, script returns exit code 1.
+  If no id is specified, script returns exit code 2 (CLI standard exit code for
+  CLI args misuse)
   """
-  pass
+  runner = CliRunner()
+  with runner.isolated_filesystem():
+    result = runner.invoke(knards.main, ['edit'])
+    assert result.exit_code == 2
 
-def test_target_card_does_not_exist(
-  mocker,
-):
+def test_card_id_must_be_proper_integer():
+  """
+  Card id argument must be a proper integer number. Otherwise, script returns
+  exit code 3.
+  """
+  runner = CliRunner()
+  with runner.isolated_filesystem():
+    result = runner.invoke(knards.main, ['edit', '--id', 'a'])
+    assert result.exit_code == 3
+
+    result = runner.invoke(knards.main, ['edit', '--id', '1'])
+    assert result.exit_code == 3
+
+def test_DB_does_not_exist():
+  """
+  If the DB is not found, script returns exit code 5.
+  """
+  runner = CliRunner()
+  with runner.isolated_filesystem():
+    db_path = os.getcwd() + '/' + config.DB
+    mocker.patch('knards.config.get_DB_name', return_value=db_path)
+
+    result = runner.invoke(knards.main, ['edit', '--id', 1])
+    assert result.exit_code == 5
+
+def test_target_card_does_not_exist(mocker):
   """
   If the card with the specified id is not found in the DB, script returns
-  exit code 1.
+  exit code 6.
   """
-  pass
+  runner = CliRunner()
+  with runner.isolated_filesystem():
+    # create the DB
+    runner.invoke(knards.main, ['bootstrap-db'])
+    db_path = os.getcwd() + '/' + config.DB
+    mocker.patch('knards.config.get_DB_name', return_value=db_path)
 
-def test_DB_does_not_exist(
-  mocker,
-):
-  """
-  If the DB is not found, script returns exit code 1.
-  """
-  pass
+    mocker.patch('knards.util.open_in_editor')
+
+    # invoke the subcommand
+    result = runner.invoke(knards.main, ['edit', '--id', 1])
+    assert result.exit_code == 6
 
 def test_buffer_contains_metadata_question_and_answer(mocker):
   """
