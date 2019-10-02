@@ -47,28 +47,26 @@ def check_buffer(subcommand, input_buffer):
   """
   valid = False
 
-  if subcommand == 'new':
-    pass
-  elif subcommand == 'edit':
-    if len(input_buffer.split('\n')) < 5:
-      input_buffer += '\n' * (5 - len(input_buffer.split('\n')))
+  if len(input_buffer.split('\n')) < 5:
+    input_buffer += '\n' * (5 - len(input_buffer.split('\n')))
 
-    for index, line in enumerate(input_buffer.split('\n')):
-      if index == 0 and 'Markers: [' not in line:
-        raise exceptions.BadBufferFormat('First line in the buffer must be of \
+  for index, line in enumerate(input_buffer.split('\n')):
+    if index == 0 and 'Markers: [' not in line:
+      raise exceptions.BadBufferFormat('First line in the buffer must be of \
 the following format: Markers: [markers for the card]')
-      if index == 1 and 'Series: [' not in line:
-        raise exceptions.BadBufferFormat('Second line in the buffer must be \
+    if index == 1 and 'Series: [' not in line:
+      raise exceptions.BadBufferFormat('Second line in the buffer must be \
 of the following format: Series: [name of the series]')
-      if index == 2 and 'No. in series: ' not in line:
-        raise exceptions.BadBufferFormat('Third line in the buffer must be of \
+    if index == 2 and 'No. in series: ' not in line:
+      raise exceptions.BadBufferFormat('Third line in the buffer must be of \
 the following format: No. in series: #')
-      if index == 3 and line != msg.DIVIDER_LINE:
-        raise exceptions.BadBufferFormat('Fourth line in the buffer must be \
+    if index == 3 and line != msg.DIVIDER_LINE:
+      raise exceptions.BadBufferFormat('Fourth line in the buffer must be \
 equal to the standard divider line (100x -).')
-    else:
-      valid = True
+  else:
+    valid = True
 
+  if subcommand == 'edit':
     if input_buffer.count(msg.DIVIDER_LINE) > 2:
       raise exceptions.BadBufferFormat('Buffer cannot have more than 2x \
 standard divider lines (100x -).')

@@ -101,41 +101,14 @@ def new(qf, copy_last):
     while not valid:
       submit_question = util.open_in_editor(submit_question)
 
-      if len(submit_question.split('\n')) < 5:
-        submit_question += '\n' * (5 - len(submit_question.split('\n')))
-
-      for index, line in enumerate(submit_question.split('\n')):
-        if index == 0 and 'Markers: [' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_MARKERS)
-          break
-        if index == 1 and 'Series: [' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_SERIES)
-          break
-        if index == 2 and 'No. in series: ' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_POS_IN_SERIES)
-          break
-        if index == 3 and line != msg.DIVIDER_LINE:
-          print(msg.CLI_ERROR_DONT_CHANGE_DIVIDER_LINE)
-          break
-        if index > 3 and line == msg.DIVIDER_LINE:
-          print(msg.CLI_ERROR_TOO_MANY_DIVIDER_LINES)
-          break
-      else:
-        valid = True
+      try:
+        submit_question, valid = util.check_buffer('new', submit_question)
+      except exceptions.BadBufferFormat as e:
+        print(e.args[0])
 
       if not valid:
-        print(msg.RETRY)
-        retry = readchar.readkey()
-        if retry != 'y':
-          sys.exit(1)
-
-        # offset one line downwards to make output more readable
-        print()
-
-        # allow 3 retries max (anti infinite loop)
-        retry_count += 1
-        if retry_count > 3:
-          sys.exit(1)
+        if not util.retry_buffer(retry_count):
+          sys.exit(7)
 
     valid = False
     retry_count = 1
@@ -143,41 +116,14 @@ def new(qf, copy_last):
     while not valid:
       submit_answer = util.open_in_editor(submit_answer)
 
-      if len(submit_answer.split('\n')) < 5:
-        submit_answer += '\n' * (5 - len(submit_answer.split('\n')))
-
-      for index, line in enumerate(submit_answer.split('\n')):
-        if index == 0 and 'Markers: [' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_MARKERS)
-          break
-        if index == 1 and 'Series: [' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_SERIES)
-          break
-        if index == 2 and 'No. in series: ' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_POS_IN_SERIES)
-          break
-        if index == 3 and line != msg.DIVIDER_LINE:
-          print(msg.CLI_ERROR_DONT_CHANGE_DIVIDER_LINE)
-          break
-        if index > 3 and line == msg.DIVIDER_LINE:
-          print(msg.CLI_ERROR_TOO_MANY_DIVIDER_LINES)
-          break
-      else:
-        valid = True
+      try:
+        submit_answer, valid = util.check_buffer('new', submit_answer)
+      except exceptions.BadBufferFormat as e:
+        print(e.args[0])
 
       if not valid:
-        print(msg.RETRY)
-        retry = readchar.readkey()
-        if retry != 'y':
-          sys.exit(1)
-
-        # offset one line downwards to make output more readable
-        print()
-
-        # allow 3 retries max (anti infinite loop)
-        retry_count += 1
-        if retry_count > 3:
-          sys.exit(1)
+        if not util.retry_buffer(retry_count):
+          sys.exit(7)
 
     question_text = ''
     for index, line in enumerate(submit_question.split('\n')):
@@ -214,41 +160,14 @@ def new(qf, copy_last):
     while not valid:
       submit_answer = util.open_in_editor(submit_answer)
 
-      if len(submit_answer.split('\n')) < 5:
-        submit_answer += '\n' * (5 - len(submit_answer.split('\n')))
-
-      for index, line in enumerate(submit_answer.split('\n')):
-        if index == 0 and 'Markers: [' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_MARKERS)
-          break
-        if index == 1 and 'Series: [' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_SERIES)
-          break
-        if index == 2 and 'No. in series: ' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_POS_IN_SERIES)
-          break
-        if index == 3 and line != msg.DIVIDER_LINE:
-          print(msg.CLI_ERROR_DONT_CHANGE_DIVIDER_LINE)
-          break
-        if index > 3 and line == msg.DIVIDER_LINE:
-          print(msg.CLI_ERROR_TOO_MANY_DIVIDER_LINES)
-          break
-      else:
-        valid = True
+      try:
+        submit_answer, valid = util.check_buffer('new', submit_answer)
+      except exceptions.BadBufferFormat as e:
+        print(e.args[0])
 
       if not valid:
-        print(msg.RETRY)
-        retry = readchar.readkey()
-        if retry != 'y':
-          sys.exit(1)
-
-        # offset one line downwards to make output more readable
-        print()
-
-        # allow 3 retries max (anti infinite loop)
-        retry_count += 1
-        if retry_count > 3:
-          sys.exit(1)
+        if not util.retry_buffer(retry_count):
+          sys.exit(7)
 
     valid = False
     retry_count = 1
@@ -256,41 +175,14 @@ def new(qf, copy_last):
     while not valid:
       submit_question = util.open_in_editor(submit_question)
 
-      if len(submit_question.split('\n')) < 5:
-        submit_question += '\n' * (5 - len(submit_question.split('\n')))
-
-      for index, line in enumerate(submit_question.split('\n')):
-        if index == 0 and 'Markers: [' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_MARKERS)
-          break
-        if index == 1 and 'Series: [' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_SERIES)
-          break
-        if index == 2 and 'No. in series: ' not in line:
-          print(msg.CLI_ERROR_DONT_CHANGE_POS_IN_SERIES)
-          break
-        if index == 3 and line != msg.DIVIDER_LINE:
-          print(msg.CLI_ERROR_DONT_CHANGE_DIVIDER_LINE)
-          break
-        if index > 3 and line == msg.DIVIDER_LINE:
-          print(msg.CLI_ERROR_TOO_MANY_DIVIDER_LINES)
-          break
-      else:
-        valid = True
+      try:
+        submit_question, valid = util.check_buffer('new', submit_question)
+      except exceptions.BadBufferFormat as e:
+        print(e.args[0])
 
       if not valid:
-        print(msg.RETRY)
-        retry = readchar.readkey()
-        if retry != 'y':
-          sys.exit(1)
-
-        # offset one line downwards to make output more readable
-        print()
-
-        # allow 3 retries max (anti infinite loop)
-        retry_count += 1
-        if retry_count > 3:
-          sys.exit(1)
+        if not util.retry_buffer(retry_count):
+          sys.exit(7)
 
     question_text = ''
     for index, line in enumerate(submit_question.split('\n')):
@@ -408,6 +300,7 @@ def edit(card_id):
   4 - sqlite operation error
   5 - DB not found
   6 - card not found in the DB
+  7 - user failed to fill in the buffer properly
   """
 
   # try to fetch the card from the DB
