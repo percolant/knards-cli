@@ -26,10 +26,7 @@ def test_card_id_must_be_proper_integer():
     result = runner.invoke(knards.main, ['edit', '--id', 'a'])
     assert result.exit_code == 3
 
-    result = runner.invoke(knards.main, ['edit', '--id', '1'])
-    assert result.exit_code == 3
-
-def test_DB_does_not_exist():
+def test_DB_does_not_exist(mocker):
   """
   If the DB is not found, script returns exit code 5.
   """
@@ -77,19 +74,18 @@ def test_buffer_contains_metadata_question_and_answer(mocker):
   with runner.isolated_filesystem():
     # create the DB
     runner.invoke(knards.main, ['bootstrap-db'])
+
     # store the card
     db_path = os.getcwd() + '/' + config.DB
-    api.create_card(card_obj1, db_path)
-    api.create_card(card_obj2, db_path)
+    mocker.patch('knards.config.get_DB_name', return_value=db_path)
 
-    mocker.patch('knards.util.open_in_editor', side_effect=ValueError)
-    mocker.patch(
-      'knards.api.get_card_by_id',
-      return_value=api.get_card_by_id(2, db_path=db_path)
-    )
+    api.create_card(card_obj1)
+    api.create_card(card_obj2)
+
+    mocker.patch('knards.util.open_in_editor', side_effect=Exception)
 
     # invoke the subcommand
-    result = runner.invoke(knards.main, ['edit', '--id', '2'])
+    result = runner.invoke(knards.main, ['edit', '--id', 2])
     assert result.exit_code == 1
     assert card_obj2.markers in util.open_in_editor.call_args_list[0][0][0]
     assert card_obj2.series in util.open_in_editor.call_args_list[0][0][0]
