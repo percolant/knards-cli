@@ -34,8 +34,8 @@ def bootstrap_db(db_path=config.DB):
           answer text,
           markers text,
           series text,
-          date_created date,
-          date_updated date,
+          date_created timestamp,
+          date_updated timestamp,
           score number
         )
       """)
@@ -183,8 +183,8 @@ def get_card_by_id(card_id, db_path=config.get_DB_name()):
   1. An integer that represents target card's id.
   2. A path to the DB file (optional, defaults to config.DB)
 
-  Returns an object of type knards.Card or None if a card with the given id
-  wasn't found in the DB.
+  Returns an object of type knards.Card representing the card data stored in
+  the DB.
   """
   try:
     int(card_id)
