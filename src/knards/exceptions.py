@@ -3,3 +3,6 @@ class DBFileNotFound(Exception):
 
 class CardNotFound(Exception):
   pass
+
+class BadBufferFormat(Exception):
+  pass

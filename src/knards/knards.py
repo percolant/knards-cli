@@ -5,8 +5,9 @@ from datetime import datetime
 from collections import namedtuple
 import readchar
 import sys
+import sqlite3
 
-from knards import api, msg, util
+from knards import api, msg, util, exceptions
 
 # card object blueprint
 Card = namedtuple(
@@ -395,12 +396,36 @@ def list(q, a, inc, exc):
 def edit(card_id):
   """
   Open a card for edit. Then update it in the DB.
+
+  Input:
+  card_id - target card's id. Must be a proper integer.
+
+  Exit codes:
+  0 - success
+  1 - error
+  2 - CLI args misuse
+  3 - id arg is not a proper integer
+  4 - sqlite operation error
+  5 - DB not found
+  6 - card not found in the DB
   """
+
+  # try to fetch the card from the DB
   try:
-    card_obj = api.get_card_by_id(int(card_id))
+    card_obj = api.get_card_by_id(card_id)
   except ValueError as e:
     print(e.args[0])
-    sys.exit(1)
+    sys.exit(3)
+  except sqlite3.OperationalError:
+    print('Couldn\'t connect to the DB, check if the file exists and has \
+proper permissions assigned.')
+    sys.exit(4)
+  except exceptions.DBFileNotFound as e:
+    print(e.args[0])
+    sys.exit(5)
+  except exceptions.CardNotFound as e:
+    print(e.args[0])
+    sys.exit(6)
 
   prompt = 'Markers: [{}]\n'.format(card_obj.markers)
   prompt += 'Series: [{}]\n'.format(card_obj.series)
@@ -417,42 +442,14 @@ def edit(card_id):
   while not valid:
     submit = util.open_in_editor(submit)
 
-    if len(submit.split('\n')) < 5:
-      submit += '\n' * (5 - len(submit.split('\n')))
-
-    for index, line in enumerate(submit.split('\n')):
-      if index == 0 and 'Markers: [' not in line:
-        print(msg.CLI_ERROR_DONT_CHANGE_MARKERS)
-        break
-      if index == 1 and 'Series: [' not in line:
-        print(msg.CLI_ERROR_DONT_CHANGE_SERIES)
-        break
-      if index == 2 and 'No. in series: ' not in line:
-        print(msg.CLI_ERROR_DONT_CHANGE_POS_IN_SERIES)
-        break
-      if index == 3 and line != msg.DIVIDER_LINE:
-        print(msg.CLI_ERROR_DONT_CHANGE_DIVIDER_LINE)
-        break
-    else:
-      valid = True
-
-    if submit.count(msg.DIVIDER_LINE) > 2:
-      print(msg.CLI_ERROR_TOO_MANY_DIVIDER_LINES)
-      valid = False
+    try:
+      submit, valid = util.check_buffer('edit', submit)
+    except exceptions.BadBufferFormat as e:
+      print(e.args[0])
 
     if not valid:
-      print(msg.RETRY)
-      retry = readchar.readkey()
-      if retry != 'y':
-        sys.exit(1)
-
-      # offset one line downwards to make output more readable
-      print()
-
-      # allow 3 retries max (anti infinite loop)
-      retry_count += 1
-      if retry_count > 3:
-        sys.exit(1)
+      if not util.retry_buffer(retry_count):
+        sys.exit(7)
 
   # remove redundant empty lines on either side
   submit_meta = submit.split(msg.DIVIDER_LINE)[0].strip('\n').split('\n')
