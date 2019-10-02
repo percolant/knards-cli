@@ -1,7 +1,7 @@
 from datetime import datetime, date
 import sqlite3
 
-from knards import knards, config, msg, util
+from knards import knards, config, msg, util, exceptions
 
 
 def bootstrap_db(db_path=config.DB):
@@ -177,7 +177,7 @@ def get_card_set(
 
   return card_set_without_answers
 
-def get_card_by_id(card_id, db_path=config.DB):
+def get_card_by_id(card_id, db_path=config.get_DB_name()):
   """
   Takes in:
   1. An integer that represents target card's id.
@@ -186,35 +186,24 @@ def get_card_by_id(card_id, db_path=config.DB):
   Returns an object of type knards.Card or None if a card with the given id
   wasn't found in the DB.
   """
-  if type(card_id) is not int:
-    print(msg.CARD_ID_MUST_BE_INT)
-    return None
+  try:
+    int(card_id)
+  except ValueError:
+    raise ValueError('id must be a proper number.')
 
-  connection = util.db_connect(db_path)
-  if not connection:
-    return None
-
-  cursor = connection.cursor()
-
-  with connection:
+  with util.db_connect(db_path) as connection:
+    cursor = connection.cursor()
     cursor.execute("""
       SELECT * FROM cards WHERE id = {}
     """.format(card_id))
     card = cursor.fetchone()
 
-  connection.close()
-
   if not card:
-    return None
+    raise exceptions.CardNotFound(
+      'Card #{} was not found in the DB.'.format(card_id)
+    )
 
-  # cast card to list, translate dates to str
-  card = list(card)
-  for index, prop in enumerate(card):
-    if isinstance(prop, date):
-      card[index] = prop.strftime('%Y-%m-%d')
-
-  card_obj = knards.Card(*card)
-  return card_obj
+  return knards.Card(*card)
 
 def get_last_card(markers=None, db_path=config.DB):
   """
