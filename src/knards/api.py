@@ -284,30 +284,23 @@ date_created = (SELECT MAX(date_created) FROM cards))
 
   return card_obj
 
-def create_card(card_obj, db_path=config.DB):
+def create_card(card_obj, db_path=config.get_DB_name()):
   """
   Takes in:
   1. An object of type knards.Card
   2. A path to the DB file (optional, defaults to config.DB)
 
-  Returns an id of the card in the DB created based on this object or None upon
-  failure.
+  Returns an id of the card in the DB created based on the passed in object.
   """
   if type(card_obj) is not knards.Card:
-    print(msg.INPUT_ARG_MUST_BE_CARD)
-    return False
-
-  connection = util.db_connect(db_path)
-  if not connection:
-    return False
-
-  cursor = connection.cursor()
+    raise ValueError('Input card object must be of type knards.Card')
 
   # find a free id
   # this allows to reuse ids that were used and then freed up by deleting the
   # object
   free_id = 1
-  with connection:
+  with util.db_connect(db_path) as connection:
+    cursor = connection.cursor()
     cursor.execute("""
       SELECT (id) FROM cards
     """)
@@ -320,17 +313,13 @@ def create_card(card_obj, db_path=config.DB):
 
     card_obj = card_obj._replace(id=free_id)
 
-  created_with_id = False
-  with connection:
-    try:
-      cursor.execute("""
-        INSERT INTO cards VALUES ({})
-      """.format(','.join(list('?' * len(card_obj)))), (card_obj))
-      created_with_id = cursor.lastrowid
-    except sqlite3.IntegrityError:
-      print(msg.CANNOT_CREATE_CARD)
+  with util.db_connect(db_path) as connection:
+    cursor = connection.cursor()
+    cursor.execute("""
+      INSERT INTO cards VALUES ({})
+    """.format(','.join(list('?' * len(card_obj)))), (card_obj))
+    created_with_id = cursor.lastrowid
 
-  connection.close()
   return created_with_id
 
 def update_card(card_obj, db_path=config.get_DB_name()):
