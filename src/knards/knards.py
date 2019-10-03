@@ -296,7 +296,7 @@ def edit(card_id):
   0 - success
   1 - error
   2 - CLI args misuse
-  3 - id arg is not a proper integer
+  3 - api method got wrong input
   4 - sqlite operation error
   5 - DB not found
   6 - card not found in the DB
@@ -369,8 +369,13 @@ proper permissions assigned.')
   else:
     card_obj = card_obj._replace(answer=answer_text)
 
-  updated = api.update_card(card_obj)
-  if updated:
-    print(msg.EDIT_CARD_SUCCESS.format(card_id))
-  else:
-    print(msg.EDIT_CARD_FAILURE)
+  try:
+    updated_with_id = api.update_card(card_obj)
+  except ValueError as e:
+    print(e.args[0])
+    sys.exit(3)
+  except sqlite3.OperationalError:
+    print('Error while trying to update the target record in the DB.')
+    sys.exit(4)
+
+  print(msg.EDIT_CARD_SUCCESS.format(updated_with_id))
