@@ -96,14 +96,39 @@ def test_buffer_contains_metadata_question_and_answer(mocker):
     assert \
       util.open_in_editor.call_args_list[0][0][0].count(msg.DIVIDER_LINE) == 2
 
-def test_card_is_successfully_saved_into_db(
-  mocker,
-):
+def test_card_is_successfully_saved_into_db(mocker, edit_prompt_proper_fill):
   """
   After the opened buffer edited and saved, the card is successfully save into
-  DB.
+  the DB.
   """
-  pass
+  card_obj = knards.Card()
+
+  runner = CliRunner()
+  with runner.isolated_filesystem():
+    # create the DB
+    runner.invoke(knards.main, ['bootstrap-db'])
+
+    # store the card
+    db_path = os.getcwd() + '/' + config.DB
+    mocker.patch('knards.config.get_DB_name', return_value=db_path)
+
+    api.create_card(card_obj)
+
+    mocker.patch(
+      'knards.util.open_in_editor',
+      return_value=edit_prompt_proper_fill
+    )
+
+    # invoke the subcommand
+    result = runner.invoke(knards.main, ['edit', '--id', 1])
+    assert result.exit_code == 0
+
+    card_obj = api.get_card_by_id(1)
+    assert card_obj.markers == 'edited marker'
+    assert card_obj.series == 'edited series'
+    assert card_obj.pos_in_series == 2
+    assert 'Edited question text.' in card_obj.question
+    assert 'Edited answer text.' in card_obj.answer
 
 def test_date_updated_is_updated_to_todays(
   mocker,

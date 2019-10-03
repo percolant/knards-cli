@@ -60,3 +60,9 @@ def prompt_bad_fill_no_divider():
 
   return '''Markers: []\nSeries: []\nNo. in series: 1\n{}\n\
 '''.format(card_obj.question)
+
+@pytest.fixture()
+def edit_prompt_proper_fill():
+  return '''Markers: [edited marker]\nSeries: [edited series]\n\
+No. in series: 2\n{}\nEdited question text.\n{}\nEdited answer text.\n\
+'''.format(msg.DIVIDER_LINE, msg.DIVIDER_LINE)
