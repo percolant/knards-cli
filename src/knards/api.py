@@ -333,55 +333,40 @@ def create_card(card_obj, db_path=config.DB):
   connection.close()
   return created_with_id
 
-def update_card(card_obj, db_path=config.DB):
+def update_card(card_obj, db_path=config.get_DB_name()):
   """
   Takes in:
   1. An object of type knards.Card
   2. A path to the DB file (optional, defaults to config.DB)
 
-  Returns True upon success and False upon failure.
+  Returns the id of the card that is updated.
   """
   if type(card_obj) is not knards.Card:
-    print(msg.INPUT_ARG_MUST_BE_CARD)
-    return False
+    raise ValueError('Input card object must be of type knards.Card')
 
-  connection = util.db_connect(db_path)
-  if not connection:
-    return False
+  with util.db_connect(db_path) as connection:
+    cursor = connection.cursor()
+    cursor.execute("""
+      UPDATE cards SET question = ?,
+                       answer = ?,
+                       markers = ?,
+                       series = ?,
+                       pos_in_series = ?,
+                       date_updated = ?,
+                       score = ?
+                   WHERE id = ?
+    """, (
+      card_obj.question,
+      card_obj.answer,
+      card_obj.markers,
+      card_obj.series,
+      card_obj.pos_in_series,
+      datetime.now(),
+      card_obj.score,
+      card_obj.id
+    ))
 
-  cursor = connection.cursor()
-
-  updated = False
-  with connection:
-    try:
-      cursor.execute("""
-        UPDATE cards SET question = ?,
-                         answer = ?,
-                         markers = ?,
-                         series = ?,
-                         pos_in_series = ?,
-                         date_updated = ?,
-                         score = ?
-                     WHERE id = ?
-      """, (
-        card_obj.question,
-        card_obj.answer,
-        card_obj.markers,
-        card_obj.series,
-        card_obj.pos_in_series,
-        datetime.today().strftime('%Y-%m-%d'),
-        card_obj.score,
-        card_obj.id
-      ))
-      updated = True
-    except sqlite3.IntegrityError:
-      print(msg.CANNOT_CREATE_CARD)
-
-  connection.close()
-  if updated:
-    return True
-  else:
-    return False
+  return card_obj.id
 
 def delete_card(card_id=None, markers=None, db_path=config.DB):
   """
