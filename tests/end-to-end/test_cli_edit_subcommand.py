@@ -1,5 +1,6 @@
 import click
 from click.testing import CliRunner
+from datetime import datetime, timedelta
 import pytest
 import os
 
@@ -130,11 +131,38 @@ def test_card_is_successfully_saved_into_db(mocker, edit_prompt_proper_fill):
     assert 'Edited question text.' in card_obj.question
     assert 'Edited answer text.' in card_obj.answer
 
-def test_date_updated_is_updated_to_todays(
-  mocker,
-):
+def test_date_updated_is_updated_to_todays(mocker, edit_prompt_proper_fill):
   """
   After successful edit, the .date_updated of the card is updated to be equal
   to the today's date.
   """
-  pass
+  card_obj = knards.Card(
+    date_created=datetime.now() - timedelta(days=1),
+    date_updated=datetime.now() - timedelta(days=1)
+  )
+
+  runner = CliRunner()
+  with runner.isolated_filesystem():
+    # create the DB
+    runner.invoke(knards.main, ['bootstrap-db'])
+
+    # store the card
+    db_path = os.getcwd() + '/' + config.DB
+    mocker.patch('knards.config.get_DB_name', return_value=db_path)
+
+    api.create_card(card_obj)
+
+    mocker.patch(
+      'knards.util.open_in_editor',
+      return_value=edit_prompt_proper_fill
+    )
+
+    # invoke the subcommand
+    result = runner.invoke(knards.main, ['edit', '--id', 1])
+    assert result.exit_code == 0
+
+    card_obj = api.get_card_by_id(1)
+    assert card_obj.date_created.strftime('%Y-%m-%d %H:%M:%S') == \
+      (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S')
+    assert card_obj.date_updated.strftime('%Y-%m-%d %H:%M:%S') == \
+      datetime.now().strftime('%Y-%m-%d %H:%M:%S')
