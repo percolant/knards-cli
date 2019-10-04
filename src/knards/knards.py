@@ -2,7 +2,7 @@
 
 import click
 from datetime import datetime
-from collections import namedtuple
+from collections import abc, namedtuple
 import readchar
 import sys
 import sqlite3
@@ -375,7 +375,53 @@ proper permissions assigned.')
     print(e.args[0])
     sys.exit(3)
   except sqlite3.OperationalError:
-    print('Error while trying to update the target record in the DB.')
+    click.secho(
+      'Error while trying to update the target record in the DB.',
+      fg='red', bold=True
+    )
     sys.exit(4)
 
-  print(msg.EDIT_CARD_SUCCESS.format(updated_with_id))
+  click.secho(
+    'Card #{} was successfully updated.'.format(updated_with_id),
+    fg='green', bold=True
+  )
+
+@main.command()
+@click.option(
+  '--id', 'card_id', type=int,
+  help='The id of the card that is to be deleted'
+)
+@click.option(
+  '--m', 'markers', type=str,
+  help='A list of markers all of which each card that is to be deleted must \
+have. Examples: --m=python; --m="english, vocabulary"'
+)
+def delete(card_id, markers):
+  """Delete a card/cards from the DB"""
+
+  # Exit codes:
+  # 0: success
+  # 1: unknown error
+  # 2: bad input arguments
+
+  if not card_id and not markers:
+    with click.Context(delete) as ctx:
+      click.echo(delete.get_help(ctx))
+    sys.exit(2)
+
+  if markers:
+    markers = markers.split(',')
+
+  result = api.delete_card(card_id, markers)
+  assert isinstance(result, int) or isinstance(result, abc.Sequence)
+
+  if isinstance(result, int):
+    click.secho(
+      'Card #{} was successfully deleted.'.format(result),
+      fg='green', bold=True
+    )
+  elif isinstance(result, abc.Sequence):
+    click.secho(
+      '{} cards were deleted.'.format(len(result)),
+      fg='green', bold=True
+    )
