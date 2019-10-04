@@ -1,10 +1,8 @@
 from click.testing import CliRunner
 import os
 import pytest
-import sys
-import readchar
 
-from knards import knards, api, util, config
+from knards import knards, api, config
 
 
 def test_without_args_specified():
