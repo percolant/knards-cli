@@ -61,7 +61,8 @@ def bootstrap_db():
   help='What should be prompted for first? Question or answer?'
 )
 @click.option('--copy-last', default=False, is_flag=True)
-def new(qf, copy_last):
+@click.option('--copy-from-id', type=int)
+def new(qf, copy_last, copy_from_id):
   """
   Prompt to create a new card.
 
@@ -79,8 +80,14 @@ def new(qf, copy_last):
   card's text, generates an object of type knards.Card and feeds it to the
   create_card()
   """
+
   if copy_last:
     card_obj = api.get_last_card()
+    prompt = 'Markers: [{}]\n'.format(card_obj.markers)
+    prompt += 'Series: [{}]\n'.format(card_obj.series)
+    prompt += 'No. in series: {}\n'.format(card_obj.pos_in_series)
+  elif copy_from_id:
+    card_obj = api.get_card_by_id(copy_from_id)
     prompt = 'Markers: [{}]\n'.format(card_obj.markers)
     prompt += 'Series: [{}]\n'.format(card_obj.series)
     prompt += 'No. in series: {}\n'.format(card_obj.pos_in_series)
