@@ -3,6 +3,7 @@
 import click
 from datetime import datetime
 from collections import abc, namedtuple
+import re
 import readchar
 import sys
 import sqlite3
@@ -309,6 +310,14 @@ def edit(card_id):
   6 - card not found in the DB
   7 - user failed to fill in the buffer properly
   """
+  # Exit codes:
+  # 0: success
+  # 1: unknown error
+  # 2: bad input arguments
+  # 3: sqlite3 module exception
+  # 4: api method got wrong input
+  # 5: DB file not found
+  # 6: object not found
 
   # try to fetch the card from the DB
   try:
@@ -410,6 +419,10 @@ def delete(card_id, markers):
   # 0: success
   # 1: unknown error
   # 2: bad input arguments
+  # 3: sqlite3 module exception
+  # 4: api method got wrong input
+  # 5: DB file not found
+  # 6: object not found
 
   if not card_id and not markers:
     with click.Context(delete) as ctx:
@@ -417,9 +430,27 @@ def delete(card_id, markers):
     sys.exit(2)
 
   if markers:
-    markers = markers.split(',')
+    markers = [
+      a for a in \
+      re.split(r'(\s|\,)', markers.strip('')) \
+      if a != ' ' and a != ','
+    ]
 
-  result = api.delete_card(card_id, markers)
+  try:
+    result = api.delete_card(card_id, markers)
+  except (sqlite3.OperationalError, sqlite3.IntegrityError) as e:
+    click.secho(e.args[0], fg='red', bold=True)
+    sys.exit(3)
+  except TypeError as e:
+    click.secho(e.args[0], fg='red', bold=True)
+    sys.exit(4)
+  except exceptions.DBFileNotFound as e:
+    click.secho(e.args[0], fg='red', bold=True)
+    sys.exit(5)
+  except exceptions.CardNotFound as e:
+    click.secho(e.args[0], fg='red', bold=True)
+    sys.exit(6)
+
   assert isinstance(result, int) or isinstance(result, abc.Sequence)
 
   if isinstance(result, int):
