@@ -231,14 +231,14 @@ def new(qf, copy_last, copy_from_id):
   help='Should the output include the answer text?'
 )
 @click.option(
-  '--inc',
-  help='A marker or a list of markers. Only cards that contain ALL of those \
-markers will be output'
+  '--inc', 'include_markers', type=str, default=[],
+  help='A list of markers all of which each card that is to be revised must \
+have. Examples: --inc=python; --inc="english, vocabulary"'
 )
 @click.option(
-  '--exc',
-  help='A marker or a list of markers. Only cards that do not contain NEITHER \
-of those markers will be output'
+  '--exc', 'exclude_markers', type=str, default=[],
+  help='A list of markers none of which each card that is to be revised must \
+have. Examples: --exc=python; --exc="english, vocabulary"'
 )
 def list(q, a, inc, exc):
   """
@@ -463,3 +463,54 @@ def delete(card_id, markers):
       '{} cards were deleted.'.format(len(result)),
       fg='green', bold=True
     )
+
+@main.command()
+@click.option(
+  '--inc', 'include_markers', type=str, default=[],
+  help='A list of markers all of which each card that is to be revised must \
+have. Examples: --inc=python; --inc="english, vocabulary"'
+)
+@click.option(
+  '--exc', 'exclude_markers', type=str, default=[],
+  help='A list of markers none of which each card that is to be revised must \
+have. Examples: --exc=python; --exc="english, vocabulary"'
+)
+def revise(include_markers, exclude_markers):
+  """Revise a set of cards"""
+
+  # Exit codes:
+  # 0: success
+  # 1: unknown error
+  # 2: bad input arguments
+  # 3: sqlite3 module exception
+  # 4: api method got wrong input
+  # 5: DB file not found
+  # 6: no cards adhere to constraints
+
+  if include_markers:
+    include_markers = [
+      a for a in \
+      re.split(r'(\s|\,)', include_markers.strip('')) \
+      if a != ' ' and a != ','
+    ]
+  if exclude_markers:
+    exclude_markers = [
+      a for a in \
+      re.split(r'(\s|\,)', exclude_markers.strip('')) \
+      if a != ' ' and a != ','
+    ]
+
+  try:
+    card_set = api.get_card_set(
+      revisable_only=True,
+      include_markers=include_markers,
+      exclude_markers=exclude_markers
+    )
+  except TypeError as e:
+    click.secho(e.args[0], fg='red', bold=True)
+    sys.exit(4)
+  except exceptions.EmptyDB as e:
+    click.secho(e.args[0], fg='red', bold=True)
+    sys.exit(6)
+
+  return True
