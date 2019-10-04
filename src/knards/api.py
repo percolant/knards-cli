@@ -357,71 +357,53 @@ def update_card(card_obj, db_path=config.get_DB_name()):
 
   return card_obj.id
 
-def delete_card(card_id=None, markers=None, db_path=config.DB):
+def delete_card(card_id=None, markers=None, db_path=config.get_DB_name()):
+  """Deletes a card/cards from the DB
+
+  Args:
+    card_id (int): The id of the card that is to be deleted
+    markers (str[]): A list of markers all of which each card that is to be
+      deleted must have
+    db_path (str): The path to the DB (optional, defaults to what's defined in
+      config module)
+
+  Raises:
+    TODO
+
+  Returns:
+    card_id: id of the card that was deleted
+    deleted_ids: List of all deleted cards' ids
   """
-  Takes in:
-  1. An integer number representing an id of an existing card object.
-  2. A list of strings representing a set of markers that all the affected card
-  objects must contain.
-  3. A path to the DB file (optional, defaults to config.DB)
 
-  Deletes a card specified by card_id.
-  Deletes a set of cards that contain ALL markers sent as the 'markers'
-  argument.
-  Deletes a card specified by id if both 'card_id' and 'markers' args are
-  passed in. Ignores 'markers'
-
-  Returns True upon success and False upon failure.
-  """
-  if card_id:
-    if type(card_id) is not int:
-      print(msg.CARD_ID_MUST_BE_INT)
-      return False
-
-    if not get_card_by_id(card_id):
-      print(msg.CARD_BY_ID_NOT_FOUND.format(card_id))
-      return False
-
-  elif markers:
-    if type(markers) is not list:
-      print(msg.MARKERS_MUST_BE_LIST)
-      return False
-    else:
-      for elem in markers:
-        if type(elem) is not str:
-          print(msg.MARKERS_MUST_BE_LIST)
-          return False
-
-  connection = util.db_connect(db_path)
-  if not connection:
-    return False
-
-  cursor = connection.cursor()
+  assert card_id or markers
+  assert isinstance(db_path, str) and len(db_path) > 0
 
   if card_id:
-    with connection:
+    if not isinstance(get_card_by_id(card_id), knards.Card):
+      raise exceptions.CardNotFound(
+        'Card #{} does not exist in the DB.'.format(card_id)
+      )
+
+    with util.db_connect(db_path) as connection:
+      cursor = connection.cursor()
       cursor.execute("""
         DELETE FROM cards WHERE id = {}
       """.format(card_id))
 
+    return card_id
+
   elif markers:
-    ids_to_delete = []
+    if not isinstance(markers, list):
+      raise TypeError('\'markers\' argument must be a list.')
 
-    card_set = get_card_set()
+    card_set = get_card_set(include_markers=markers)
+    assert len(card_set) != len(get_card_set())
 
-    for card in card_set:
-      has_markers = card.markers.split()
-      for marker in markers:
-        if marker not in has_markers:
-          break
-      else:
-        ids_to_delete.append(card.id)
-
-    for id in ids_to_delete:
-      with connection:
+    with util.db_connect(db_path) as connection:
+      cursor = connection.cursor()
+      for card in card_set:
         cursor.execute("""
           DELETE FROM cards WHERE id = {}
-        """.format(id))
+        """.format(card.id))
 
-  connection.close()
-  return True
+    return [card.id for card in card_set]
