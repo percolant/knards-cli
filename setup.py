@@ -8,6 +8,7 @@ setup(
     'Click',
     'readchar',
     'termcolor',
+    'blist',
   ],
   entry_points='''
     [console_scripts]
