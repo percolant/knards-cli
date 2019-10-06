@@ -1,8 +1,10 @@
 #!python3
 
+from blist import blist
 import click
 from datetime import datetime
 from collections import abc, namedtuple
+import random
 import re
 import readchar
 import sys
@@ -501,16 +503,74 @@ def revise(include_markers, exclude_markers):
     ]
 
   try:
-    card_set = api.get_card_set(
-      revisable_only=True,
+    card_set = blist(api.get_card_set(
       include_markers=include_markers,
       exclude_markers=exclude_markers
-    )
+    ))
+    full_card_set = blist(api.get_card_set())
   except TypeError as e:
     click.secho(e.args[0], fg='red', bold=True)
     sys.exit(4)
+  except exceptions.DBFileNotFound as e:
+    click.secho(e.args[0], fg='red', bold=True)
+    sys.exit(5)
   except exceptions.EmptyDB as e:
     click.secho(e.args[0], fg='red', bold=True)
     sys.exit(6)
 
-  return True
+  while card_set:
+    card_obj = card_set.pop(random.randrange(len(card_set)))
+
+    # if the card is part of series, pick out all cards of that series
+    if card_obj.series:
+      try:
+        subset = api.get_series_set(card_obj.series)
+        subset_length = len(subset)
+      except (
+        TypeError,
+        sqlite3.OperationalError,
+        exceptions.DBFileNotFound,
+        exceptions.EmptyDB
+      ):
+        subset = None
+        subset_length = None
+
+      assert subset is not None
+      assert subset_length is not None
+
+      while subset:
+        series_obj = subset.pop(min(subset.keys()))
+
+        # check if the card is ready to be revised
+        if series_obj.date_updated is not None:
+          if series_obj.score >= (
+            datetime.now() - series_obj.date_updated
+          ).days:
+            continue
+
+        try:
+          util.ask(series_obj, subset_length)
+        except ValueError as e:
+          # from api.update_card
+          pass
+        except sqlite3.OperationalError as e:
+          # from api.update_card
+          pass
+
+    # else, just ask the question
+    else:
+      # check if the card is ready to be revised
+      if card_obj.date_updated is not None:
+        if card_obj.score >= (
+          datetime.now() - card_obj.date_updated
+        ).days:
+          continue
+
+      try:
+        util.ask(card_obj)
+      except ValueError as e:
+        # from api.update_card
+        pass
+      except sqlite3.OperationalError as e:
+        # from api.update_card
+        pass
