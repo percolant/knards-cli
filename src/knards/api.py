@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from collections import abc
 import sqlite3
 
 from knards import knards, config, msg, util, exceptions
@@ -54,55 +55,58 @@ def get_card_set(
     include_markers=[],
     exclude_markers=[],
     today=False,
-    db_path=config.DB
+    db_path=config.get_DB_name()
   ):
+  """Outputs a set of objects of type knards.Card constrained by the passed in
+  options
+
+  Args:
+    revisable_only (bool): Returns only card objects that are ready to be
+  revised
+    show_questions (bool): Include/exclude question text into results
+    show_answer (bool): Include/exclude answer text into results
+    include_markers (str[]): A list of markers all of which each card that is
+  to be revised must have
+    exclude_markers (str[]): A list of markers none of which each card that is
+  to be revised must have
+    today (bool): Returns only card objects that were already revised today
+    db_path (str): The path to the DB (optional, defaults to what's defined in
+      config module)
+
+  Raises:
+    TODO
+
+  Returns:
+    TODO
   """
-  Takes in:
-  1. revisable_only - only output cards that are ready to be revised (see below)
-  2. show_question - include/exclude the question text from returned card objects.
-  3. show_answer - include/exclude the answer text from returned card objects.
-  4. include_markers - must be list -> markers that MUST be present in each
-  returned card.
-  5. exclude_markers - must be list -> markers that any one of the returned
-  cards may have.
-  6. today - only output cards that were already revised today.
 
-  Outputs a list of objects of type knards.Card or [] upon failure.
-  """
-  if not isinstance(revisable_only, bool) or \
-    not isinstance(today, bool) or \
-    not isinstance(show_question, bool) or \
-    not isinstance(show_answer, bool) or \
-    not isinstance(include_markers, list) or \
-    not isinstance(exclude_markers, list):
-    return []
+  if not isinstance(revisable_only, bool):
+    raise TypeError('revisable_only must be a boolean.')
+  if not isinstance(today, bool):
+    raise TypeError('today must be a boolean.')
+  if not isinstance(show_question, bool):
+    raise TypeError('show_question must be a boolean.')
+  if not isinstance(show_answer, bool):
+    raise TypeError('show_answer must be a boolean.')
+  if not isinstance(include_markers, abc.Sequence):
+    raise TypeError('include_markers must be a list.')
+  if not isinstance(exclude_markers, abc.Sequence):
+    raise TypeError('exclude_markers must be a list.')
 
-  connection = util.db_connect(db_path)
-  if not connection:
-    return []
-
-  cursor = connection.cursor()
-
-  with connection:
+  with util.db_connect(db_path) as connection:
+    cursor = connection.cursor()
     cursor.execute("""
       SELECT * FROM cards
     """)
     card_set = cursor.fetchall()
 
-  connection.close()
-
   if not card_set:
-    return []
+    raise exceptions.EmptyDB('No cards adhere to the specified constraints.')
 
   # translate dates to str
   card_set_as_objects = []
   for card in card_set:
-    holder = list(card)
-    for index, prop in enumerate(holder):
-      if isinstance(prop, date):
-        holder[index] = prop.strftime('%Y-%m-%d')
-    # and cast to knards.Card
-    card_set_as_objects.append(knards.Card(*holder))
+    card_set_as_objects.append(knards.Card(*list(card)))
 
   card_set_revisable = []
   for card in card_set_as_objects:
@@ -113,7 +117,7 @@ def get_card_set(
       if card.date_updated is None:
         card_set_revisable.append(card)
       elif card.score <= (
-        datetime.today() - datetime.strptime(card.date_updated, '%Y-%m-%d')
+        datetime.now() - card.date_updated
       ).days:
         card_set_revisable.append(card)
     else:
@@ -155,7 +159,7 @@ def get_card_set(
     # return cards that have date_updated equal to today's date (were revised
     # today)
     if today:
-      if card.date_updated == datetime.today().strftime('%Y-%m-%d'):
+      if card.date_updated and card.date_updated.date() == datetime.now().date():
         card_set_today.append(card)
     else:
       card_set_today = card_set_excluded_markers
@@ -176,6 +180,40 @@ def get_card_set(
     card_set_without_answers = card_set_without_questions
 
   return card_set_without_answers
+
+def get_series_set(series_name, db_path=config.get_DB_name()):
+  """Returns all cards that belong to the specified series.
+
+  Args:
+    series_name (str): The series name
+    db_path (str): The path to the DB (optional, defaults to what's defined in
+      config module)
+
+  Raises:
+    TODO
+
+  Returns:
+    A set of cards all of which belong to the series
+  """
+
+  if not isinstance(series_name, str):
+    raise TypeError('\'series_name\' argument must be a list.')
+
+  with util.db_connect(db_path) as connection:
+    cursor = connection.cursor()
+    cursor.execute("""
+      SELECT * FROM cards WHERE series = '{}'
+    """.format(series_name))
+    card_set = cursor.fetchall()
+
+  if not card_set:
+    raise exceptions.EmptyDB('No cards adhere to the specified constraints.')
+
+  sorted_card_set = {}
+  for card in card_set:
+    sorted_card_set[knards.Card(*card).pos_in_series] = knards.Card(*card)
+
+  return sorted_card_set
 
 def get_card_by_id(card_id, db_path=config.get_DB_name()):
   """
