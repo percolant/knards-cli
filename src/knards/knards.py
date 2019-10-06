@@ -233,34 +233,34 @@ def new(qf, copy_last, copy_from_id):
   help='Should the output include the answer text?'
 )
 @click.option(
-  '--inc', 'include_markers', type=str, default=[],
+  '--inc', 'include_markers', type=str,
   help='A list of markers all of which each card that is to be revised must \
 have. Examples: --inc=python; --inc="english, vocabulary"'
 )
 @click.option(
-  '--exc', 'exclude_markers', type=str, default=[],
+  '--exc', 'exclude_markers', type=str,
   help='A list of markers none of which each card that is to be revised must \
 have. Examples: --exc=python; --exc="english, vocabulary"'
 )
-def list(q, a, inc, exc):
+def list(q, a, include_markers, exclude_markers):
   """
   Output a set of cards in the set up editor.
   """
-  if inc is not None:
-    inc_markers_list = inc.split(',')
+  if include_markers is not None:
+    include_markers = include_markers.split(',')
   else:
-    inc_markers_list = []
-  if exc is not None:
-    exc_markers_list = exc.split(',')
+    include_markers = []
+  if exclude_markers is not None:
+    exclude_markers = exclude_markers.split(',')
   else:
-    exc_markers_list = []
+    exclude_markers = []
 
   # fetch cards from the DB according to the constraints defined by input args
   card_set = api.get_card_set(
     show_question=q,
     show_answer=a,
-    include_markers=inc_markers_list,
-    exclude_markers=exc_markers_list,
+    include_markers=include_markers,
+    exclude_markers=exclude_markers,
   )
 
   # generate list buffer
@@ -268,7 +268,7 @@ def list(q, a, inc, exc):
   for card in card_set:
     if card.date_updated is not None:
       date_updated = \
-        datetime.strptime(card.date_updated, '%Y-%m-%d').strftime('%d %b %Y')
+        card.date_updated.strftime('%d %b %Y')
     else:
       date_updated = 'Never'
     buf += msg.CARD_LIST_TEMPLATE.format(
@@ -276,7 +276,7 @@ def list(q, a, inc, exc):
       card.markers,
       card.pos_in_series,
       card.series,
-      datetime.strptime(card.date_created, '%Y-%m-%d').strftime('%d %b %Y'),
+      card.date_created.strftime('%d %b %Y'),
       date_updated,
       card.score,
       msg.DIVIDER_LINE,
