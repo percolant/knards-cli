@@ -24,6 +24,7 @@ elpy = "*"
 click = "*"
 readchar = "*"
 termcolor = "*"
+blist = "*"
 
 [requires]
 python_version = "3.6"
