@@ -518,8 +518,21 @@ def revise(include_markers, exclude_markers):
     click.secho(e.args[0], fg='red', bold=True)
     sys.exit(6)
 
+  # sort the card set
+  never_updated = []
+  updated = []
+  for card in card_set:
+    if not card.date_updated:
+      never_updated.append(card)
+      continue
+    updated.append(card)
+  updated.sort(key=lambda obj: obj.date_updated)
+  never_updated.sort(key=lambda obj: obj.date_created)
+  card_set = updated + never_updated
+
+  # proceed to revising cards
   while card_set:
-    card_obj = card_set.pop(random.randrange(len(card_set)))
+    card_obj = card_set.pop(0)
 
     # if the card is part of series, pick out all cards of that series
     if card_obj.series:
