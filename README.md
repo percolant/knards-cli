@@ -64,3 +64,8 @@ Start revising cards.
 
 `$ kn rev --inc="multiple words,python" --exc=c++`
 Start revising cards that have markers "multiple words" and "python" and don't have marker "c++".
+
+---
+
+`$ kn merge --b=knards.db --t=knards2.db --res=knards_final.db`
+Merge two DB files, create `knards_final.db`, add cards from `knards.db` first, then add cards from `knards2.db`, then reindex.
