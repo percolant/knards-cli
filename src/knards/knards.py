@@ -556,7 +556,7 @@ def revise(include_markers, exclude_markers):
 
         # check if the card is ready to be revised
         if series_obj.date_updated is not None:
-          if series_obj.score >= (
+          if series_obj.score > (
             datetime.now() - series_obj.date_updated
           ).days:
             continue
@@ -574,7 +574,7 @@ def revise(include_markers, exclude_markers):
     else:
       # check if the card is ready to be revised
       if card_obj.date_updated is not None:
-        if card_obj.score >= (
+        if card_obj.score > (
           datetime.now() - card_obj.date_updated
         ).days:
           continue
