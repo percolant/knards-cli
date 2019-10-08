@@ -228,5 +228,8 @@ def get_fibonacci_sequence(target_number):
     add1 = add2
     add2 = seq[-1]
 
-  seq.append(add1 + add2)
+  if add1 == 0 and add2 == 1:
+    seq.append(2)
+  else:
+    seq.append(add1 + add2)
   return seq
