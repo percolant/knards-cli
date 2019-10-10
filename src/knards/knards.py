@@ -553,10 +553,10 @@ def revise(include_markers, exclude_markers):
 
       # all cards from the series must be ready for revision
       series_ready = True
-      for series_obj in subset:
-        if series_obj.date_updated is not None:
-          if series_obj.score > (
-            datetime.now().date() - series_obj.date_updated.date()
+      for series_obj_num in subset:
+        if subset[series_obj_num].date_updated is not None:
+          if subset[series_obj_num].score > (
+            datetime.now().date() - subset[series_obj_num].date_updated.date()
           ).days:
             series_ready = False
             break
