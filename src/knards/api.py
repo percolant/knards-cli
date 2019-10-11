@@ -241,7 +241,10 @@ def get_card_by_id(card_id, db_path=config.get_DB_name()):
       'Card #{} was not found in the DB.'.format(card_id)
     )
 
-  return knards.Card(*card)
+  card_obj = knards.Card(*card)
+  card_obj = card_obj._replace(date_created=datetime.now())
+
+  return card_obj
 
 def get_last_card(markers=None, db_path=config.DB):
   """
@@ -319,6 +322,8 @@ date_created = (SELECT MAX(date_created) FROM cards))
   connection.close()
   if not card:
     return None
+
+  card_obj = card_obj._replace(date_created=datetime.now())
 
   return card_obj
 
