@@ -594,3 +594,21 @@ def revise(include_markers, exclude_markers):
       except sqlite3.OperationalError as e:
         # from api.update_card
         pass
+
+@main.command()
+def status():
+  """
+  TODO
+  """
+
+  total_card_set = api.get_card_set()
+  revised_today_set = api.get_card_set(today=True)
+  more_revisable = api.get_card_set(revisable_only=True)
+
+  click.secho('There\'re {} cards in the DB file in total.\n\
+You\'ve revised {} cards today.\n\
+There\'re {} more cards ready for revision today.'.format(
+    len(total_card_set),
+    len(revised_today_set),
+    len(more_revisable)
+  ), fg='yellow', bold=True)
