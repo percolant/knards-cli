@@ -279,11 +279,13 @@ def list(q, a, include_markers, exclude_markers):
       card.date_created.strftime('%d %b %Y'),
       date_updated,
       card.score,
-      msg.DIVIDER_LINE,
-      card.question,
-      msg.DIVIDER_LINE,
-      card.answer,
     )
+    if q:
+      buf += '\n{}\n'.format(card.question)
+      if a:
+        buf += '{}\n'.format(msg.DIVIDER_LINE)
+    if a:
+      buf += '\n{}\n'.format(card.answer)
 
   util.open_in_editor(buf)
 
