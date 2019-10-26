@@ -4,13 +4,15 @@ from blist import blist
 import click
 from datetime import datetime
 from collections import abc, namedtuple
+import os
 import random
 import re
 import readchar
+from shutil import copyfile
 import sys
 import sqlite3
 
-from knards import api, msg, util, exceptions
+from knards import api, msg, util, exceptions, config
 
 # card object blueprint
 Card = namedtuple(
@@ -618,3 +620,97 @@ There\'re {} more cards ready for revision today.'.format(
     len(revised_today_set),
     len(more_revisable)
   ), fg='yellow', bold=True)
+
+@main.command()
+@click.option(
+  '--db', 'db_file', type=str,
+  help='The path to the DB file that will be merge into the default DB file \
+(one that\'s set in config.py)'
+)
+def merge(db_file):
+  """
+  TODO
+  """
+
+  # check if merge file exists and is a proper DB file
+  try:
+    with util.db_connect(db_file) as connection:
+      cursor = connection.cursor()
+      cursor.execute("""
+        SELECT * FROM cards
+      """)
+      card_set = cursor.fetchall()
+
+    card_set_as_objects = []
+    for card in card_set:
+      card_set_as_objects.append(Card(*card))
+
+    full_card_set = blist(api.get_card_set())
+    dates = []
+    for card in full_card_set:
+      dates.append(card.date_created)
+
+  except exceptions.DBFileNotFound as e:
+    print(e.args[0])
+    sys.exit(1)
+  except sqlite3.DatabaseError:
+    print('{} is not a proper DB file to merge.'.format(db_file))
+    sys.exit(1)
+
+  # backup both DB files
+  try:
+    copyfile(
+      config.get_DB_name(),
+      config.get_tmp_path() + 'main_{}'.format(
+        datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')
+      )
+    )
+  except IOError as e:
+    print("Unable to copy file. %s" % e)
+    sys.exit(1)
+  except:
+    print("Unexpected error:", sys.exc_info())
+    sys.exit(1)
+
+  try:
+    copyfile(
+      db_file,
+      config.get_tmp_path() + 'merge_{}'.format(
+        datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')
+      )
+    )
+  except IOError as e:
+    print("Unable to copy file. %s" % e)
+    sys.exit(1)
+  except:
+    print("Unexpected error:", sys.exc_info())
+    sys.exit(1)
+
+  # merge
+  merged = 0
+  skipped = 0
+  for card in card_set_as_objects:
+    if card.date_created in dates:
+      skipped += 1
+      continue
+
+    merged += 1
+    api.create_card(card)
+
+  if skipped == 0:
+    click.secho(
+      'DB file ({}) was successfully merged into the default DB file.'.format(
+        db_file
+      ), fg='green', bold=True
+    )
+
+    os.remove(db_file)
+  else:
+    click.secho(
+      '{} cards merged; {} cards skipped; You might be trying to merge a DB \
+file that was already merged.\nMerged DB file wasn\'t removed in case \
+something went wrong, please check manually and then remove the file.'.format(
+        merged,
+        skipped
+      ), fg='red', bold=True
+    )
