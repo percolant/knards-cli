@@ -103,7 +103,6 @@ def get_card_set(
   if not card_set:
     raise exceptions.EmptyDB('No cards adhere to the specified constraints.')
 
-  # translate dates to str
   card_set_as_objects = []
   for card in card_set:
     card_set_as_objects.append(knards.Card(*list(card)))
@@ -402,13 +401,19 @@ def update_card(card_obj, db_path=config.get_DB_name()):
 
   return card_obj.id
 
-def delete_card(card_id=None, markers=None, db_path=config.get_DB_name()):
+def delete_card(
+  card_id=None,
+  markers=None,
+  series=None,
+  db_path=config.get_DB_name()
+):
   """Deletes a card/cards from the DB
 
   Args:
     card_id (int): The id of the card that is to be deleted
     markers (str[]): A list of markers all of which each card that is to be
       deleted must have
+    series (str): The name of the series that is to be deleted
     db_path (str): The path to the DB (optional, defaults to what's defined in
       config module)
 
@@ -420,7 +425,7 @@ def delete_card(card_id=None, markers=None, db_path=config.get_DB_name()):
     deleted_ids: List of all deleted cards' ids
   """
 
-  assert card_id or markers
+  assert card_id or markers or series
   assert isinstance(db_path, str) and len(db_path) > 0
 
   if card_id:
@@ -452,3 +457,24 @@ def delete_card(card_id=None, markers=None, db_path=config.get_DB_name()):
         """.format(card.id))
 
     return [card.id for card in card_set]
+
+  elif series:
+    if not isinstance(series, str):
+      raise TypeError('\'series\' argument must be a string.')
+
+    with util.db_connect(db_path) as connection:
+      cursor = connection.cursor()
+      cursor.execute("""
+        SELECT * FROM cards WHERE series = '{}'
+      """.format(series))
+      card_set = cursor.fetchall()
+
+      card_set_as_objects = []
+      for card in card_set:
+        card_set_as_objects.append(knards.Card(*list(card)))
+
+      cursor.execute("""
+        DELETE FROM cards WHERE series = '{}'
+      """.format(series))
+
+    return [card.id for card in card_set_as_objects]
