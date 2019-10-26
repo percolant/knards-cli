@@ -416,7 +416,11 @@ proper permissions assigned.')
   help='A list of markers all of which each card that is to be deleted must \
 have. Examples: --m=python; --m="english, vocabulary"'
 )
-def delete(card_id, markers):
+@click.option(
+  '--s', 'series', type=str,
+  help='The name of the series that is to be deleted'
+)
+def delete(card_id, markers, series):
   """Delete a card/cards from the DB"""
 
   # Exit codes:
@@ -428,7 +432,7 @@ def delete(card_id, markers):
   # 5: DB file not found
   # 6: object not found
 
-  if not card_id and not markers:
+  if not card_id and not markers and not series:
     with click.Context(delete) as ctx:
       click.echo(delete.get_help(ctx))
     sys.exit(2)
@@ -441,7 +445,7 @@ def delete(card_id, markers):
     ]
 
   try:
-    result = api.delete_card(card_id, markers)
+    result = api.delete_card(card_id, markers, series)
   except (sqlite3.OperationalError, sqlite3.IntegrityError) as e:
     click.secho(e.args[0], fg='red', bold=True)
     sys.exit(3)
