@@ -661,7 +661,7 @@ def merge(db_file):
   try:
     copyfile(
       config.get_DB_name(),
-      config.get_tmp_path() + 'main_{}'.format(
+      config.get_backup_path() + 'main_{}'.format(
         datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')
       )
     )
@@ -675,7 +675,7 @@ def merge(db_file):
   try:
     copyfile(
       db_file,
-      config.get_tmp_path() + 'merge_{}'.format(
+      config.get_backup_path() + 'merge_{}'.format(
         datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')
       )
     )
