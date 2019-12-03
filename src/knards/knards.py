@@ -102,6 +102,9 @@ def new(qf, copy_last, copy_from_id):
     prompt += 'Series: []\n'
     prompt += 'No. in series: 1\n'
 
+  card_obj = card_obj._replace(date_created=datetime.now())
+  card_obj = card_obj._replace(score=0)
+
   prompt += msg.DIVIDER_LINE + '\n'
 
   if qf:

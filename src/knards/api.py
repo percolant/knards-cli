@@ -241,9 +241,6 @@ def get_card_by_id(card_id, db_path=config.get_DB_name()):
     )
 
   card_obj = knards.Card(*card)
-  card_obj = card_obj._replace(date_created=datetime.now())
-  card_obj = card_obj._replace(score=0)
-
   return card_obj
 
 def get_last_card(markers=None, db_path=config.DB):
