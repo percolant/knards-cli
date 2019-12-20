@@ -12,6 +12,6 @@ setup(
   ],
   entry_points='''
     [console_scripts]
-    knl=knards.knards:main
+    kn=knards.knards:main
   ''',
 )
