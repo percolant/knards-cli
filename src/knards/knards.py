@@ -409,6 +409,7 @@ proper permissions assigned.')
         fg='green', bold=True
     )
 
+
 @main.command()
 @click.option(
     '--id', 'card_id', type=int,
@@ -475,6 +476,7 @@ def delete(card_id, markers, series):
             fg='green', bold=True
         )
 
+
 @main.command()
 @click.option(
     '--inc', 'include_markers', type=str, default=[],
@@ -516,7 +518,7 @@ def revise(include_markers, exclude_markers):
             include_markers=include_markers,
             exclude_markers=exclude_markers
         ))
-        full_card_set = blist(api.get_card_set())
+        # full_card_set = blist(api.get_card_set())
     except TypeError as e:
         click.secho(e.args[0], fg='red', bold=True)
         sys.exit(4)
@@ -537,6 +539,8 @@ def revise(include_markers, exclude_markers):
         updated.append(card)
     updated.sort(key=lambda obj: obj.date_updated)
     never_updated.sort(key=lambda obj: obj.date_created)
+
+    # we want this: first go all cards that were ever revised, then unrevised
     card_set = updated + never_updated
 
     # proceed to revising cards
@@ -554,37 +558,34 @@ def revise(include_markers, exclude_markers):
                 exceptions.DBFileNotFound,
                 exceptions.EmptyDB
             ):
-                # TODO I'm not sure about this, get to this after refactor
+                subset = {1: card_obj}
+                subset_length = 1
+
+            # all cards from the series must be ready for revision
+            series_ready = True
+            for series_obj_num in subset:
+                if subset[series_obj_num].date_updated is not None:
+                    if subset[series_obj_num].score > (
+                        datetime.now().date() - subset[series_obj_num].date_updated.date()
+                    ).days:
+                        series_ready = False
+                        break
+
+            # if not, continue to the next card
+            if not series_ready:
                 continue
 
-            assert subset is not None
-            assert subset_length is not None
+            while subset:
+                series_obj = subset.pop(min(subset.keys()))
 
-        # all cards from the series must be ready for revision
-        series_ready = True
-        for series_obj_num in subset:
-            if subset[series_obj_num].date_updated is not None:
-                if subset[series_obj_num].score > (
-                    datetime.now().date() - subset[series_obj_num].date_updated.date()
-                ).days:
-                    series_ready = False
-                    break
-
-        # if not, continue to the next card
-        if not series_ready:
-            continue
-
-        while subset:
-            series_obj = subset.pop(min(subset.keys()))
-
-            try:
-                util.ask(series_obj, subset_length)
-            except ValueError as e:
-                # from api.update_card
-                pass
-            except sqlite3.OperationalError as e:
-                # from api.update_card
-                pass
+                try:
+                    util.ask(series_obj, subset_length)
+                except ValueError as e:
+                    # from api.update_card
+                    pass
+                except sqlite3.OperationalError as e:
+                    # from api.update_card
+                    pass
 
         # else, just ask the question
         else:
@@ -606,14 +607,45 @@ def revise(include_markers, exclude_markers):
 
 
 @main.command()
-def status():
+@click.option(
+    '--inc', 'include_markers', type=str, default=[],
+    help='A list of markers all of which each card that is to be revised must \
+have. Examples: --inc=python; --inc="english, vocabulary"'
+)
+@click.option(
+    '--exc', 'exclude_markers', type=str, default=[],
+    help='A list of markers none of which each card that is to be revised must \
+have. Examples: --exc=python; --exc="english, vocabulary"'
+)
+def status(include_markers, exclude_markers):
     """
     TODO
     """
 
+    if include_markers:
+        include_markers = [
+            a for a in \
+            re.split(r'(\s|,)', include_markers.strip(''))
+            if a != ' ' and a != ','
+        ]
+    if exclude_markers:
+        exclude_markers = [
+            a for a in \
+            re.split(r'(\s|,)', exclude_markers.strip(''))
+            if a != ' ' and a != ','
+        ]
+
     total_card_set = api.get_card_set()
-    revised_today_set = api.get_card_set(today=True)
-    more_revisable = api.get_card_set(revisable_only=True)
+    revised_today_set = api.get_card_set(
+        today=True,
+        include_markers=include_markers,
+        exclude_markers=exclude_markers
+    )
+    more_revisable = api.get_card_set(
+        revisable_only=True,
+        include_markers=include_markers,
+        exclude_markers=exclude_markers
+    )
 
     click.secho('There\'re {} cards in the DB file in total.\n\
 You\'ve revised {} cards today.\n\
