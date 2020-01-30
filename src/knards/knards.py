@@ -635,7 +635,10 @@ def status(include_markers, exclude_markers):
             if a != ' ' and a != ','
         ]
 
-    total_card_set = api.get_card_set()
+    total_card_set = api.get_card_set(
+        include_markers=include_markers,
+        exclude_markers=exclude_markers
+    )
     revised_today_set = api.get_card_set(
         today=True,
         include_markers=include_markers,
