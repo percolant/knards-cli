@@ -293,42 +293,35 @@ date_created = (SELECT MAX(date_created) FROM cards))
             card_set = get_card_set()
             cards_to_pick_from = []
 
-        # sift in only cards that contain all of the specified markers
-        for card in card_set:
-            has_markers = card.markers.split()
-            for marker in markers:
-                if marker not in has_markers:
-                    break
-            else:
-                cards_to_pick_from.append(card)
+            # sift in only cards that contain all of the specified markers
+            for card in card_set:
+                has_markers = card.markers.split()
+                for marker in markers:
+                    if marker not in has_markers:
+                        break
+                else:
+                    cards_to_pick_from.append(card)
 
-        if not cards_to_pick_from:
-            print(msg.CARDS_BY_MARKERS_NOT_FOUND.format(', '.join(markers)))
-            return None
+            if not cards_to_pick_from:
+                print(msg.CARDS_BY_MARKERS_NOT_FOUND.format(', '.join(markers)))
+                return None
 
-        # find out the most recent date of addition of a card with specified markers
-        max_date = datetime(1970, 1, 1)
-        for card in cards_to_pick_from:
-            if datetime.strptime(card.date_created, '%Y-%m-%d') > max_date:
-                max_date = datetime.strptime(card.date_created, '%Y-%m-%d')
-        max_date = max_date.strftime('%Y-%m-%d')
+            # find out the most recent date of addition of a card with specified markers
+            max_date = datetime(1970, 1, 1)
+            for card in cards_to_pick_from:
+                if card.date_created > max_date:
+                    max_date = card.date_created
 
-        # find out the max card id among the sifted in cards
-        card_with_max_id = knards.Card(id=0)
-        for card in cards_to_pick_from:
-            if card.date_created == max_date and card.id > card_with_max_id.id:
-                card_with_max_id = card
+            # find out the max card id among the sifted in cards
+            card_with_max_id = knards.Card(id=0)
+            for card in cards_to_pick_from:
+                if card.date_created == max_date and card.id > card_with_max_id.id:
+                    card_with_max_id = card
 
-        card_obj = card_with_max_id
-        card = 'This is a shitty algorithm, rewrite it!'
+            card_obj = card_with_max_id
+            card = 'This is a shitty algorithm, rewrite it!'
 
-    connection.close()
-    if not card:
-        return None
-
-    card_obj = card_obj._replace(date_created=datetime.now())
-    card_obj = card_obj._replace(score=0)
-
+    assert card
     return card_obj
 
 

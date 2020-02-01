@@ -65,7 +65,13 @@ def bootstrap_db():
 )
 @click.option('--copy-last', default=False, is_flag=True)
 @click.option('--copy-from-id', type=int)
-def new(qf, copy_last, copy_from_id):
+@click.option(
+    '--m', 'markers', type=str,
+    help='When creating a new card out of a last added, you may specify a set \
+of markers all of which the target card must have. Examples: --m=python; \
+--m="english,vocabulary"'
+)
+def new(qf, copy_last, copy_from_id, markers):
     """
     Prompt to create a new card.
 
@@ -84,25 +90,33 @@ def new(qf, copy_last, copy_from_id):
     create_card()
     """
 
+    if markers is not None:
+        markers = markers.split(',')
+    else:
+        markers = []
+
     if copy_last:
-        card_obj = api.get_last_card()
+        card_obj = api.get_last_card(markers=markers)
         prompt = 'Markers: [{}]\n'.format(card_obj.markers)
         prompt += 'Series: [{}]\n'.format(card_obj.series)
-        prompt += 'No. in series: {}\n'.format(card_obj.pos_in_series)
+        # prompt += 'No. in series: {}\n'.format(card_obj.pos_in_series)
     elif copy_from_id:
         card_obj = api.get_card_by_id(copy_from_id)
         prompt = 'Markers: [{}]\n'.format(card_obj.markers)
         prompt += 'Series: [{}]\n'.format(card_obj.series)
-        prompt += 'No. in series: {}\n'.format(card_obj.pos_in_series)
+        # prompt += 'No. in series: {}\n'.format(card_obj.pos_in_series)
     else:
         card_obj = Card()
         prompt = 'Markers: []\n'
         prompt += 'Series: []\n'
-        prompt += 'No. in series: 1\n'
+        # prompt += 'No. in series: 1\n'
 
     card_obj = card_obj._replace(date_created=datetime.now())
+    card_obj = card_obj._replace(date_updated=None)
+    card_obj = card_obj._replace(pos_in_series=card_obj.pos_in_series + 1)
     card_obj = card_obj._replace(score=0)
 
+    prompt += 'No. in series: {}\n'.format(card_obj.pos_in_series)
     prompt += msg.DIVIDER_LINE + '\n'
 
     if qf:
@@ -151,8 +165,8 @@ def new(qf, copy_last, copy_from_id):
                 card_obj = card_obj._replace(markers=line.split('[')[1].split(']')[0])
             if index == 1:
                 card_obj = card_obj._replace(series=line.split('[')[1].split(']')[0])
-            if index == 2:
-                card_obj = card_obj._replace(pos_in_series=int(line.split(':')[1][1:]))
+            # if index == 2:
+            #     card_obj = card_obj._replace(pos_in_series=int(line.split(':')[1][1:]))
             if index > 3:
                 answer_text += line + '\n'
         else:
@@ -203,8 +217,8 @@ def new(qf, copy_last, copy_from_id):
                 card_obj = card_obj._replace(markers=line.split('[')[1].split(']')[0])
             if index == 1:
                 card_obj = card_obj._replace(series=line.split('[')[1].split(']')[0])
-            if index == 2:
-                card_obj = card_obj._replace(pos_in_series=int(line.split(':')[1][1:]))
+            # if index == 2:
+            #     card_obj = card_obj._replace(pos_in_series=int(line.split(':')[1][1:]))
             if index > 3:
                 question_text += line + '\n'
         else:
