@@ -113,7 +113,10 @@ def new(qf, copy_last, copy_from_id, markers):
 
     card_obj = card_obj._replace(date_created=datetime.now())
     card_obj = card_obj._replace(date_updated=None)
-    card_obj = card_obj._replace(pos_in_series=card_obj.pos_in_series + 1)
+    if card_obj.series:
+        card_obj = card_obj._replace(pos_in_series=card_obj.pos_in_series + 1)
+    else:
+        card_obj = card_obj._replace(pos_in_series=card_obj.pos_in_series)
     card_obj = card_obj._replace(score=0)
 
     prompt += 'No. in series: {}\n'.format(card_obj.pos_in_series)
@@ -174,9 +177,15 @@ def new(qf, copy_last, copy_from_id, markers):
 
         card_id = api.create_card(card_obj)
         if card_id:
-            print(msg.NEW_CARD_SUCCESS.format(card_id))
+            click.secho(
+                msg.NEW_CARD_SUCCESS.format(card_id),
+                fg='green', bold=True
+            )
         else:
-            print(msg.NEW_CARD_FAILURE)
+            click.secho(
+                msg.NEW_CARD_FAILURE,
+                fg='red', bold=True
+            )
 
     else:
         prompt += card_obj.answer + '\n'
@@ -233,9 +242,15 @@ def new(qf, copy_last, copy_from_id, markers):
 
         card_id = api.create_card(card_obj)
         if card_id:
-            print(msg.NEW_CARD_SUCCESS.format(card_id))
+            click.secho(
+                msg.NEW_CARD_SUCCESS.format(card_id),
+                fg='green', bold=True
+            )
         else:
-            print(msg.NEW_CARD_FAILURE)
+            click.secho(
+                msg.NEW_CARD_FAILURE,
+                fg='red', bold=True
+            )
 
 
 @main.command()
@@ -252,12 +267,12 @@ def new(qf, copy_last, copy_from_id, markers):
 @click.option(
     '--inc', 'include_markers', type=str,
     help='A list of markers all of which each card that is to be revised must \
-have. Examples: --inc=python; --inc="english, vocabulary"'
+have. Examples: --inc=python; --inc="english,vocabulary"'
 )
 @click.option(
     '--exc', 'exclude_markers', type=str,
     help='A list of markers none of which each card that is to be revised must \
-have. Examples: --exc=python; --exc="english, vocabulary"'
+have. Examples: --exc=python; --exc="english,vocabulary"'
 )
 def list(q, a, include_markers, exclude_markers):
     """
@@ -555,7 +570,7 @@ def revise(include_markers, exclude_markers):
     never_updated.sort(key=lambda obj: obj.date_created)
 
     # we want this: first go all cards that were ever revised, then unrevised
-    card_set = updated + never_updated
+    card_set = never_updated + updated
 
     # proceed to revising cards
     while card_set:
