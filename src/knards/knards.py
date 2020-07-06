@@ -563,7 +563,7 @@ def revise(include_markers, exclude_markers):
             never_updated.append(card)
             continue
         updated.append(card)
-    updated.sort(key=lambda obj: obj.date_updated)
+    updated.sort(key=lambda obj: (obj.score, obj.date_updated))
     never_updated.sort(key=lambda obj: obj.date_created)
 
     # we want this: first go all cards that were ever revised, then unrevised
