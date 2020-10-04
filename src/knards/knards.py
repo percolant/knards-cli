@@ -866,3 +866,60 @@ def recommend():
                 'Revise {}: nothing to revise.'.format(what),
                 fg='red', bold=True
             )
+
+@main.command()
+@click.option(
+    '--inc', 'include_markers', type=str,
+    help='A list of markers all of which each card that is to be affected must \
+have. Examples: --inc=python; --inc="english,vocabulary"'
+)
+@click.option(
+    '--exc', 'exclude_markers', type=str,
+    help='A list of markers none of which each card that is to be affected must \
+have. Examples: --exc=python; --exc="english,vocabulary"'
+)
+@click.option(
+    '--add', 'add_marker', type=str,
+    help='A marker to be added to all selected cards.'
+)
+@click.option(
+    '--rem', 'remove_marker', type=str,
+    help='A marker to be removed from all selected cards.'
+)
+def mass_tag_assign(include_markers, exclude_markers, add_marker, remove_marker):
+    """
+    [WIP] Mass assign of tags.
+    """
+    if include_markers is not None:
+        include_markers = include_markers.split(',')
+    else:
+        include_markers = []
+    if exclude_markers is not None:
+        exclude_markers = exclude_markers.split(',')
+    else:
+        exclude_markers = []
+
+    # fetch cards from the DB according to the constraints defined by input args
+    card_set = api.get_card_set(
+        include_markers=include_markers,
+        exclude_markers=exclude_markers
+    )
+
+    if add_marker is not None:
+        for card in card_set:
+            card = card._replace(markers=card.markers + ' ' + add_marker)
+            api.update_card(card, update_now=False)
+
+    if remove_marker is not None:
+        for card in card_set:
+            markers = card.markers
+            i = markers.find(remove_marker)
+            ilen = i + len(remove_marker)
+            if ' ' + remove_marker + ' ' in markers:
+                markers = markers[0:i] + markers[ilen + 1:len(markers)]
+            elif remove_marker in markers and ilen == len(markers):
+                markers = markers[0:i]
+            elif remove_marker in markers and i == 0:
+                markers = markers[ilen + 1:len(markers)]
+            card = card._replace(markers=markers)
+            api.update_card(card, update_now=False)

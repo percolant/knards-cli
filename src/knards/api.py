@@ -365,7 +365,7 @@ def create_card(card_obj, db_path=config.get_DB_name()):
     return created_with_id
 
 
-def update_card(card_obj, db_path=config.get_DB_name()):
+def update_card(card_obj, update_now=True, db_path=config.get_DB_name()):
     """
     Takes in:
     1. An object of type knards.Card
@@ -379,25 +379,44 @@ def update_card(card_obj, db_path=config.get_DB_name()):
 
     with util.db_connect(db_path) as connection:
         cursor = connection.cursor()
-        cursor.execute("""
-            UPDATE cards SET question = ?,
-                             answer = ?,
-                             markers = ?,
-                             series = ?,
-                             pos_in_series = ?,
-                             date_updated = ?,
-                             score = ?
-                         WHERE id = ?
-        """, (
-            card_obj.question,
-            card_obj.answer,
-            card_obj.markers,
-            card_obj.series,
-            card_obj.pos_in_series,
-            datetime.now(),
-            card_obj.score,
-            card_obj.id
-        ))
+        if update_now:
+            cursor.execute("""
+                UPDATE cards SET question = ?,
+                                answer = ?,
+                                markers = ?,
+                                series = ?,
+                                pos_in_series = ?,
+                                date_updated = ?,
+                                score = ?
+                            WHERE id = ?
+            """, (
+                card_obj.question,
+                card_obj.answer,
+                card_obj.markers,
+                card_obj.series,
+                card_obj.pos_in_series,
+                datetime.now(),
+                card_obj.score,
+                card_obj.id
+            ))
+        else:
+            cursor.execute("""
+                UPDATE cards SET question = ?,
+                                answer = ?,
+                                markers = ?,
+                                series = ?,
+                                pos_in_series = ?,
+                                score = ?
+                            WHERE id = ?
+            """, (
+                card_obj.question,
+                card_obj.answer,
+                card_obj.markers,
+                card_obj.series,
+                card_obj.pos_in_series,
+                card_obj.score,
+                card_obj.id
+            ))
 
     return card_obj.id
 
