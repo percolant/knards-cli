@@ -778,3 +778,90 @@ def merge(db_file):
                 skipped
             ), fg='red', bold=True
         )
+
+@main.command()
+def recommend():
+    """
+    [WIP] Command to show recommendations.
+    """
+
+    # total_cards = len(api.get_card_set(
+    #     revisable_only=True
+    # ))
+
+    tags_groups_indexes = [i for i, key in enumerate(config.get_tags_list())]
+    tags_groups_names = [key for i, key in enumerate(config.get_tags_list())]
+    tags_groups_total_amounts = []
+    tags_groups_ready_for_revision = []
+
+    for group_name in tags_groups_names:
+        tags_groups_total_amounts.append(len(api.get_card_set(
+            include_markers=[group_name]
+        )))
+        tags_groups_ready_for_revision.append(len(api.get_card_set(
+            revisable_only=True,
+            include_markers=[group_name]
+        )))
+
+    group_indexes_to_revise = []
+    group_indexes_to_learn = []
+
+    for index in tags_groups_indexes:
+        if ((tags_groups_total_amounts[index]
+                / (tags_groups_ready_for_revision[index] + 1)) > 2
+                or tags_groups_total_amounts[index] == 0):
+            group_indexes_to_learn.append(index)
+        else:
+            group_indexes_to_revise.append(index)
+
+    if len(group_indexes_to_learn) == 0:
+        click.secho(
+            'Nothing to learn just yet.\n',
+            fg='red', bold=True
+        )
+    else:
+        for index in group_indexes_to_learn:
+            sorted_by_priority = {}
+            for tag in config.get_tags_list()[tags_groups_names[index]]:
+                total = len(api.get_card_set(include_markers=[tag]))
+                if total not in sorted_by_priority:
+                    sorted_by_priority[total] = []
+                sorted_by_priority[total].append(tag)
+
+            what = tags_groups_names[index]
+            tags = ', '.join(sorted_by_priority[
+                min([val for i, val in enumerate(sorted_by_priority)])
+            ])
+            click.secho(
+                'Learn {}: {}.'.format(what, tags),
+                fg='green', bold=True
+            )
+
+    for index in group_indexes_to_revise:
+        sorted_by_priority = {}
+        for tag in config.get_tags_list()[tags_groups_names[index]]:
+            total = len(api.get_card_set(include_markers=[tag]))
+            revisable \
+                    = len(api.get_card_set(
+                        revisable_only=True,
+                        include_markers=[tag])
+                    )
+            if total != 0 and revisable != 0:
+                if (total / revisable) not in sorted_by_priority:
+                    sorted_by_priority[total / revisable] = []
+                sorted_by_priority[total / revisable].append(tag)
+
+        what = tags_groups_names[index]
+        if sorted_by_priority != {}:
+            tags = ', '.join(sorted_by_priority[
+                min([val for i, val in enumerate(sorted_by_priority)])
+            ])
+            click.secho(
+                'Revise {}: {}.'.format(what, tags),
+                fg='yellow', bold=True
+            )
+        else:
+            click.secho(
+                'Revise {}: nothing to revise.'.format(what),
+                fg='red', bold=True
+            )
