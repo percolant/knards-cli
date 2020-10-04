@@ -833,7 +833,7 @@ def recommend():
                 min([val for i, val in enumerate(sorted_by_priority)])
             ])
             click.secho(
-                'Learn {}: {}.'.format(what, tags),
+                'Learn {}: {}.\n'.format(what, tags),
                 fg='green', bold=True
             )
 
@@ -847,9 +847,10 @@ def recommend():
                         include_markers=[tag])
                     )
             if total != 0 and revisable != 0:
-                if (total / revisable) not in sorted_by_priority:
-                    sorted_by_priority[total / revisable] = []
-                sorted_by_priority[total / revisable].append(tag)
+                priority = (total / revisable) / len(str(total))
+                if priority not in sorted_by_priority:
+                    sorted_by_priority[priority] = []
+                sorted_by_priority[priority].append(tag)
 
         what = tags_groups_names[index]
         if sorted_by_priority != {}:
