@@ -587,22 +587,16 @@ def revise(include_markers, exclude_markers):
                 subset = {1: card_obj}
                 subset_length = 1
 
-            # all cards from the series must be ready for revision
-            # series_ready = True
-            # for series_obj_num in subset:
-            #     if subset[series_obj_num].date_updated is not None:
-            #         if subset[series_obj_num].score > (
-            #             datetime.now().date() - subset[series_obj_num].date_updated.date()
-            #         ).days:
-            #             series_ready = False
-            #             break
+            filtered_subset = {}
+            for series_obj_num in subset:
+                if subset[series_obj_num].date_updated is not None:
+                    if subset[series_obj_num].score < (
+                        datetime.now().date() - subset[series_obj_num].date_updated.date()
+                    ).days:
+                        filtered_subset[series_obj_num] = subset[series_obj_num]
 
-            # if not, continue to the next card
-            # if not series_ready:
-            #     continue
-
-            while subset:
-                series_obj = subset.pop(min(subset.keys()))
+            while filtered_subset:
+                series_obj = filtered_subset.pop(min(filtered_subset.keys()))
 
                 try:
                     util.ask(series_obj, subset_length)
