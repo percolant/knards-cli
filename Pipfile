@@ -24,7 +24,6 @@ elpy = "*"
 click = "*"
 readchar = "*"
 termcolor = "*"
-blist = "*"
 knards = {editable = true,path = "."}
 
 [requires]
