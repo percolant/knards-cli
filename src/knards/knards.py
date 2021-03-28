@@ -539,10 +539,10 @@ def revise(include_markers, exclude_markers):
         ]
 
     try:
-        card_set = list(api.get_card_set(
+        card_set = api.get_card_set(
             include_markers=include_markers,
             exclude_markers=exclude_markers
-        ))
+        )
     except TypeError as e:
         click.secho(e.args[0], fg='red', bold=True)
         sys.exit(4)
@@ -701,7 +701,7 @@ def merge(db_file):
         for card in card_set:
             card_set_as_objects.append(Card(*card))
 
-        full_card_set = list(api.get_card_set())
+        full_card_set = api.get_card_set()
         dates = []
         for card in full_card_set:
             dates.append(card.date_created)
