@@ -592,6 +592,8 @@ def revise(include_markers, exclude_markers):
                         datetime.now().date() - subset[series_obj_num].date_updated.date()
                     ).days:
                         filtered_subset[series_obj_num] = subset[series_obj_num]
+                else:
+                    filtered_subset[series_obj_num] = subset[series_obj_num]
 
             while filtered_subset:
                 series_obj = filtered_subset.pop(min(filtered_subset.keys()))
