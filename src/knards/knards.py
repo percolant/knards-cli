@@ -834,22 +834,27 @@ def recommend():
     for index in group_indexes_to_revise:
         sorted_by_priority = {}
         for tag in config.get_tags_list()[tags_groups_names[index]]:
-            total = len(api.get_card_set(include_markers=[tag]))
-            revisable \
-                    = len(api.get_card_set(
-                        revisable_only=True,
-                        include_markers=[tag])
-                    )
-            if total != 0 and revisable != 0:
-                priority = (total / revisable) / len(str(total))
-                if priority not in sorted_by_priority:
-                    sorted_by_priority[priority] = []
-                sorted_by_priority[priority].append(tag)
+            total = api.get_card_set(include_markers=[tag])
+            revisable = api.get_card_set(
+                revisable_only=True,
+                include_markers=[tag]
+            )
+            priority = 0
+            for card in revisable:
+                if card.date_updated:
+                    priority += (datetime.now() - card.date_updated).days
+                else:
+                    priority += (datetime.now() - card.date_created).days
+            if len(total) != 0:
+                priority = round(priority / len(total))
+            if priority not in sorted_by_priority:
+                sorted_by_priority[priority] = []
+            sorted_by_priority[priority].append(tag)
 
         what = tags_groups_names[index]
         if sorted_by_priority != {}:
             tags = ', '.join(sorted_by_priority[
-                min([val for i, val in enumerate(sorted_by_priority)])
+                max([val for i, val in enumerate(sorted_by_priority)])
             ])
             click.secho(
                 'Revise {}: {}.'.format(what, tags),
