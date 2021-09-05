@@ -812,6 +812,9 @@ def recommend():
         for index in group_indexes_to_learn:
             sorted_by_priority = {}
             for tag in config.get_tags_list()[tags_groups_names[index]]:
+                if tag in config.get_tags_only_revise_list():
+                    continue
+
                 total = len(api.get_card_set(include_markers=[tag]))
                 if total not in sorted_by_priority:
                     sorted_by_priority[total] = []
@@ -822,13 +825,8 @@ def recommend():
                 min([val for i, val in enumerate(sorted_by_priority)])
             ]
 
-            upd_tags = []
-            for tag in tags:
-                if tag not in config.get_tags_only_revise_list():
-                    upd_tags.append(tag)
-
             click.secho(
-                'Learn {}: {}.\n'.format(what, ', '.join(upd_tags)),
+                'Learn {}: {}.\n'.format(what, ', '.join(tags)),
                 fg='green', bold=True
             )
 
