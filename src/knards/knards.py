@@ -778,11 +778,6 @@ def recommend():
     """
     [WIP] Command to show recommendations.
     """
-
-    # total_cards = len(api.get_card_set(
-    #     revisable_only=True
-    # ))
-
     tags_groups_indexes = [i for i, key in enumerate(config.get_tags_list())]
     tags_groups_names = [key for i, key in enumerate(config.get_tags_list())]
     tags_groups_total_amounts = []
@@ -823,11 +818,17 @@ def recommend():
                 sorted_by_priority[total].append(tag)
 
             what = tags_groups_names[index]
-            tags = ', '.join(sorted_by_priority[
+            tags = sorted_by_priority[
                 min([val for i, val in enumerate(sorted_by_priority)])
-            ])
+            ]
+
+            upd_tags = []
+            for tag in tags:
+                if tag not in config.get_tags_only_revise_list():
+                    upd_tags.append(tag)
+
             click.secho(
-                'Learn {}: {}.\n'.format(what, tags),
+                'Learn {}: {}.\n'.format(what, ', '.join(upd_tags)),
                 fg='green', bold=True
             )
 
