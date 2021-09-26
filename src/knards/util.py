@@ -24,7 +24,7 @@ def db_connect(db_path):
   connection = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES)
   return connection
 
-def open_in_editor(buf, editor='vim'):
+def open_in_editor(buf, editor='nvim'):
   """
   Takes in:
   1. buf - text contents to be output to the editor, buffer.
