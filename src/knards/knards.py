@@ -531,12 +531,16 @@ def revise(include_markers, exclude_markers):
             re.split(r'(\s|,)', include_markers.strip(''))
             if a != ' ' and a != ','
         ]
+    else:
+        include_markers = []
     if exclude_markers:
         exclude_markers = [
             a for a in \
             re.split(r'(\s|,)', exclude_markers.strip(''))
             if a != ' ' and a != ','
         ]
+    else:
+        exclude_markers = []
 
     try:
         card_set = api.get_card_set(
@@ -648,12 +652,16 @@ def status(include_markers, exclude_markers):
             re.split(r'(\s|,)', include_markers.strip(''))
             if a != ' ' and a != ','
         ]
+    else:
+        include_markers = []
     if exclude_markers:
         exclude_markers = [
             a for a in \
             re.split(r'(\s|,)', exclude_markers.strip(''))
             if a != ' ' and a != ','
         ]
+    else:
+        exclude_markers = []
 
     total_card_set = api.get_card_set(
         include_markers=include_markers,
