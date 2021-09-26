@@ -504,12 +504,12 @@ def delete(card_id, markers, series):
 
 @main.command()
 @click.option(
-    '--inc', 'include_markers', type=str, default=[],
+    '--inc', 'include_markers', type=str,
     help='A list of markers all of which each card that is to be revised must \
 have. Examples: --inc=python; --inc="english, vocabulary"'
 )
 @click.option(
-    '--exc', 'exclude_markers', type=str, default=[],
+    '--exc', 'exclude_markers', type=str,
     help='A list of markers none of which each card that is to be revised must \
 have. Examples: --exc=python; --exc="english, vocabulary"'
 )
@@ -628,12 +628,12 @@ def revise(include_markers, exclude_markers):
 
 @main.command()
 @click.option(
-    '--inc', 'include_markers', type=str, default=[],
+    '--inc', 'include_markers', type=str,
     help='A list of markers all of which each card that is to be revised must \
 have. Examples: --inc=python; --inc="english, vocabulary"'
 )
 @click.option(
-    '--exc', 'exclude_markers', type=str, default=[],
+    '--exc', 'exclude_markers', type=str,
     help='A list of markers none of which each card that is to be revised must \
 have. Examples: --exc=python; --exc="english, vocabulary"'
 )
@@ -648,16 +648,12 @@ def status(include_markers, exclude_markers):
             re.split(r'(\s|,)', include_markers.strip(''))
             if a != ' ' and a != ','
         ]
-    else:
-        include_markers = []
     if exclude_markers:
         exclude_markers = [
             a for a in \
             re.split(r'(\s|,)', exclude_markers.strip(''))
             if a != ' ' and a != ','
         ]
-    else:
-        exclude_markers = []
 
     total_card_set = api.get_card_set(
         include_markers=include_markers,
